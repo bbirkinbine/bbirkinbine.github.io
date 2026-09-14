@@ -1,0 +1,318 @@
+/*
+ * Visual direction inspired by terminal.css by Jonas D. (MIT).
+ * https://github.com/Gioni06/terminal.css
+ */
+
+:root {
+  color-scheme: light;
+  --background: #f3f1e7;
+  --surface: #e5e5d8;
+  --text: #172219;
+  --muted: #59695d;
+  --line: #8a998d;
+  --accent: #087443;
+  --accent-ink: #f7fff9;
+  --glow: none;
+  --scanline: rgba(23, 34, 25, 0.035);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --background: #020503;
+    --surface: #06140a;
+    --text: #55f27a;
+    --muted: #2fae51;
+    --line: #1d5f2f;
+    --accent: #9affad;
+    --accent-ink: #001405;
+    --glow: 0 0 14px rgba(85, 242, 122, 0.3);
+    --scanline: rgba(85, 242, 122, 0.04);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #020503;
+  --surface: #06140a;
+  --text: #55f27a;
+  --muted: #2fae51;
+  --line: #1d5f2f;
+  --accent: #9affad;
+  --accent-ink: #001405;
+  --glow: 0 0 14px rgba(85, 242, 122, 0.3);
+  --scanline: rgba(85, 242, 122, 0.04);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f3f1e7;
+  --surface: #e5e5d8;
+  --text: #172219;
+  --muted: #59695d;
+  --line: #8a998d;
+  --accent: #087443;
+  --accent-ink: #f7fff9;
+  --glow: none;
+  --scanline: rgba(23, 34, 25, 0.035);
+}
+
+* {
+  box-sizing: border-box;
+  text-rendering: geometricprecision;
+}
+
+*::selection {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+html {
+  font-family: "IBM Plex Mono", "Lucida Console", "Courier New", monospace;
+  background: var(--background);
+  color: var(--text);
+}
+
+body {
+  position: relative;
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  line-height: 1.6;
+  background: var(--background);
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+body::before {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    var(--scanline) 4px
+  );
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+a:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.home-page {
+  padding: clamp(4.5rem, 11vh, 7rem) 1.5rem 3rem;
+}
+
+.home {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 700px);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.home h1 {
+  margin: 0;
+  color: var(--text);
+  font-family: "VT323", "IBM Plex Mono", monospace;
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  text-shadow: var(--glow);
+}
+
+.prompt-mark {
+  color: var(--accent);
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.85em;
+  margin-left: 0.22em;
+  vertical-align: -0.06em;
+  background: var(--accent);
+  animation: terminal-cursor 900ms steps(1, end) infinite;
+  box-shadow: var(--glow);
+}
+
+@keyframes terminal-cursor {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.profile-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2.2rem;
+}
+
+.profile-links a {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.profile-links a:hover,
+.profile-links a:focus-visible {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.profile-links svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: currentColor;
+}
+
+.profile-links .stroke-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+}
+
+.profile-links .icon-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.theme-toggle {
+  position: fixed;
+  z-index: 20;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  place-items: center;
+  color: var(--accent);
+  background: var(--background);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  cursor: pointer;
+  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.theme-toggle:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.theme-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.theme-icon-moon {
+  display: block;
+}
+
+.theme-icon-sun {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .theme-icon-moon {
+    display: none;
+  }
+
+  :root:not([data-theme]) .theme-icon-sun {
+    display: block;
+  }
+}
+
+:root[data-theme="dark"] .theme-icon-moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-sun {
+  display: block;
+}
+
+:root[data-theme="light"] .theme-icon-moon {
+  display: block;
+}
+
+:root[data-theme="light"] .theme-icon-sun {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .terminal-cursor {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-page {
+    padding: 4.5rem 1rem 2.5rem;
+  }
+
+  .home h1 {
+    font-size: clamp(2.25rem, 9.2vw, 3rem);
+  }
+
+  .profile-links {
+    gap: 0.45rem;
+  }
+
+  .profile-links a {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+}
