@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Arcade Interrupt | Brian Birkinbine</title>
+    <meta name="description" content="A hidden monochrome arcade cabinet featuring VECTOR BREAK, STAR DODGE, and VECTOR SNAKE." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=VT323&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="arcade.css?v=20260919-1" />
+    <script type="module" src="arcade.mjs?v=20260919-1"></script>
+  </head>
+  <body>
+    <main class="arcade-shell">
+      <header class="cabinet-header">
+        <div>
+          <p class="eyebrow">ARCADE INTERRUPT // RANDOMIZED</p>
+          <h1 id="game-title">VECTOR BREAK</h1>
+        </div>
+        <div class="hud" aria-live="polite">
+          <span>SCORE <strong id="score">000000</strong></span>
+          <span>SHIPS <strong id="lives">03</strong></span>
+        </div>
+      </header>
+
+      <section class="screen-frame" aria-label="Hidden vector arcade game">
+        <canvas id="game-canvas" width="800" height="480" tabindex="0">
+          Your browser does not support the canvas element.
+        </canvas>
+        <div class="screen-glass" aria-hidden="true"></div>
+      </section>
+
+      <div class="cabinet-controls">
+        <p id="instructions">MOVE: ← → / A D &nbsp; START: ENTER OR SPACE</p>
+        <div class="button-row">
+          <button id="new-game" type="button">NEW RANDOM GAME</button>
+          <a href="/">ESC / RETURN HOME</a>
+        </div>
+      </div>
+
+      <div class="touch-controls" aria-label="Touch controls">
+        <button type="button" data-control="left" aria-label="Move left">◀</button>
+        <button type="button" data-control="up" aria-label="Move up">▲</button>
+        <button type="button" data-control="down" aria-label="Move down">▼</button>
+        <button type="button" data-control="right" aria-label="Move right">▶</button>
+        <button class="touch-action" type="button" data-control="action">FIRE</button>
+      </div>
+    </main>
+  </body>
+</html>

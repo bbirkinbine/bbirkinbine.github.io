@@ -13,6 +13,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 - System-aware light and dark themes with a persistent manual toggle
 - Green-phosphor terminal styling, subtle scanlines, and responsive layout
 - Accessible labels and reduced-motion support
+- Hidden monochrome vector arcade at `/games/`, opened by pressing Enter on the homepage
 - No tracking, build system, or runtime dependencies
 
 ## Project files
