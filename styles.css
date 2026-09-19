@@ -253,6 +253,7 @@ a:focus-visible {
   width: min(calc(100% - 3rem), 760px);
   margin: 0 auto;
   padding: 3.5rem 0 4rem;
+  line-height: 1.75;
 }
 
 .content-shell h1 {
@@ -268,7 +269,7 @@ a:focus-visible {
 }
 
 .content-shell h2 {
-  margin: 2.25rem 0 0.6rem;
+  margin: 0 0 0.7rem;
   color: var(--text);
   font-size: 1rem;
   font-weight: 600;
@@ -279,7 +280,21 @@ a:focus-visible {
 }
 
 .content-shell section {
-  border-top: 1px solid var(--line);
+  margin: 1rem 0;
+  padding: 1.15rem 1.3rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+}
+
+.content-shell section p:last-child {
+  margin-bottom: 0;
+}
+
+.content-shell section a {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 0.2em;
 }
 
 .back-link,
@@ -297,6 +312,12 @@ a:focus-visible {
 
 .effective-date {
   margin-bottom: 2.5rem !important;
+}
+
+.back-link {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
 }
 
 .theme-toggle {
@@ -404,6 +425,15 @@ a:focus-visible {
   .profile-links a {
     width: 2.5rem;
     height: 2.5rem;
+  }
+
+  .content-shell {
+    width: min(calc(100% - 2rem), 760px);
+    padding-top: 4.5rem;
+  }
+
+  .content-shell section {
+    padding: 1rem;
   }
 
 }
