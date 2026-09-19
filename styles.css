@@ -14,6 +14,13 @@
   --accent-ink: #f7fff9;
   --glow: none;
   --scanline: rgba(23, 34, 25, 0.035);
+  --ansi-0: var(--background);
+  --ansi-1: #d9e1d7;
+  --ansi-2: #b7c9b8;
+  --ansi-3: #86a98e;
+  --ansi-4: #4c8462;
+  --ansi-5: #1e6f44;
+  --ansi-6: #173b24;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,6 +35,13 @@
     --accent-ink: #001405;
     --glow: 0 0 14px rgba(85, 242, 122, 0.3);
     --scanline: rgba(85, 242, 122, 0.04);
+    --ansi-0: var(--background);
+    --ansi-1: #06140a;
+    --ansi-2: #0d2b16;
+    --ansi-3: #155c2a;
+    --ansi-4: #2fae51;
+    --ansi-5: #55f27a;
+    --ansi-6: #b6ffc2;
   }
 }
 
@@ -42,6 +56,13 @@
   --accent-ink: #001405;
   --glow: 0 0 14px rgba(85, 242, 122, 0.3);
   --scanline: rgba(85, 242, 122, 0.04);
+  --ansi-0: var(--background);
+  --ansi-1: #06140a;
+  --ansi-2: #0d2b16;
+  --ansi-3: #155c2a;
+  --ansi-4: #2fae51;
+  --ansi-5: #55f27a;
+  --ansi-6: #b6ffc2;
 }
 
 :root[data-theme="light"] {
@@ -55,6 +76,13 @@
   --accent-ink: #f7fff9;
   --glow: none;
   --scanline: rgba(23, 34, 25, 0.035);
+  --ansi-0: var(--background);
+  --ansi-1: #d9e1d7;
+  --ansi-2: #b7c9b8;
+  --ansi-3: #86a98e;
+  --ansi-4: #4c8462;
+  --ansi-5: #1e6f44;
+  --ansi-6: #173b24;
 }
 
 * {
@@ -127,25 +155,48 @@ a:focus-visible {
   text-align: center;
 }
 
-.ascii-portrait {
+.ansi-portrait {
   width: max-content;
   max-width: 100%;
   margin: 0 auto 1.35rem;
-  color: var(--accent);
   text-align: left;
   text-shadow: var(--glow);
 }
 
-.ascii-portrait pre {
+.ansi-portrait pre {
+  width: 42ch;
+  height: 26em;
   margin: 0;
   overflow: hidden;
   font-family: "IBM Plex Mono", "Lucida Console", "Courier New", monospace;
-  font-size: clamp(0.4rem, 1.25vw, 0.56rem);
-  font-weight: 500;
-  line-height: 0.88;
-  letter-spacing: -0.075em;
+  font-size: clamp(0.53rem, 1.2vw, 0.66rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
   white-space: pre;
 }
+
+.ansi-row {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ansi-f0 { color: var(--ansi-0); }
+.ansi-f1 { color: var(--ansi-1); }
+.ansi-f2 { color: var(--ansi-2); }
+.ansi-f3 { color: var(--ansi-3); }
+.ansi-f4 { color: var(--ansi-4); }
+.ansi-f5 { color: var(--ansi-5); }
+.ansi-f6 { color: var(--ansi-6); }
+.ansi-b0 { background-color: var(--ansi-0); }
+.ansi-b1 { background-color: var(--ansi-1); }
+.ansi-b2 { background-color: var(--ansi-2); }
+.ansi-b3 { background-color: var(--ansi-3); }
+.ansi-b4 { background-color: var(--ansi-4); }
+.ansi-b5 { background-color: var(--ansi-5); }
+.ansi-b6 { background-color: var(--ansi-6); }
 
 .home h1 {
   margin: 0;
@@ -467,7 +518,7 @@ a:focus-visible {
     padding: 3.75rem 1rem 1.5rem;
   }
 
-  .ascii-portrait {
+  .ansi-portrait {
     margin-bottom: 1.1rem;
   }
 

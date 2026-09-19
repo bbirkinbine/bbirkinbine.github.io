@@ -13,7 +13,8 @@
     />
     <script src="theme.js"></script>
     <script type="module" src="easter-egg.mjs?v=20260919-1"></script>
-    <link rel="stylesheet" href="styles.css?v=20260919-5" />
+    <script type="module" src="ansi-portrait.mjs?v=20260919-1"></script>
+    <link rel="stylesheet" href="styles.css?v=20260919-6" />
   </head>
   <body class="home-page terminal">
     <button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme">
@@ -26,33 +27,8 @@
       </svg>
     </button>
     <main class="home" aria-labelledby="page-title">
-      <figure class="ascii-portrait" role="img" aria-label="ASCII portrait of Brian Birkinbine">
-        <pre aria-hidden="true">                    .      .
-                .. ..,....,,::;,.
-               .....,,,::..:;iii;;,
-                 ..,,,::,,;rirriirr,
-              ...,;isXA5hGGG##SGM2rr.
-             .,:;is253HS9B&amp;&amp;@@@&amp;BB3X;
-              ,;isA33hHS9BBB&amp;@@@&amp;&amp;#A;
-             ,;;:rXAA3MS&amp;&amp;&amp;@@@@@@@BA:
-        .,. .,,.,:isAXX5h#&amp;H35hHG#&amp;2:
-        ;ir:.,:iXsrXhS2siHG3Xr5HMSGh5
-        ,;i,.,;iAhHS#GAiX9BB#G#99B#SX
-         :,.::;iAM#BGA2AA9@@B#B@@&amp;BH.
-         .:,:;;r5HGhs:risSB9&amp;SM9@&amp;B3
-          .::irA3Ar;isss35h#BBGh#9B5
-           ,:isA55sAi;AMS#S#Sh53#BB;
-           .::irrirX2XX5MS#&amp;@MXH9B2
-            ,;:;, .:iAhHHS9#h22hMs
-            .;;::,..:r5hHSShX23i,.::,..
-.            .;ii;;:::;irAA5M9A ::::;;;::,.
-...           .iXXXsirX2hH#&amp;@S..::::;::;i,::,..
-.,..         ...i5h322M#B&amp;@&amp;M. .;:::;:,;i:;,,;;,.
-..,, .........,, .sM#9##9S3i  ..:,:;:;,:;,;:.;;,;:..
-, ,.........  .,,.. :sXr;.   .,,. .,::;:;,;:.;::::::
-;..,,..,:, .     ..         ..:ii:,.,:;;;,;:.;:.::;:
-;: ,:::;;;..,,...    ..    ...:ii;:;;;ii::;:.;;,:;;,
-.i..;;:;ii;..;;:i:......::;...;i;;:;;;i;:;;;.;::;;::</pre>
+      <figure class="ansi-portrait" role="img" aria-label="ANSI portrait of Brian Birkinbine">
+        <pre data-ansi-portrait aria-hidden="true"></pre>
       </figure>
 
       <h1 id="page-title">
