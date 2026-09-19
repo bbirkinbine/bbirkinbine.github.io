@@ -8,7 +8,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 
 ## Features
 
-- Links to GitHub, LinkedIn, Instagram, Bluesky, X, and email
+- Links to GitHub, LinkedIn, Instagram, Bluesky, X, Keybase, and email
 - Plain-language privacy policy and terms of use
 - System-aware light and dark themes with a persistent manual toggle
 - Green-phosphor terminal styling, subtle scanlines, and responsive layout

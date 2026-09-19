@@ -419,12 +419,12 @@ a:focus-visible {
   }
 
   .profile-links {
-    gap: 0.45rem;
+    gap: 0.3rem;
   }
 
   .profile-links a {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
   }
 
   .content-shell {
