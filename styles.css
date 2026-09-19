@@ -116,7 +116,7 @@ a:focus-visible {
 .home-page {
   display: flex;
   flex-direction: column;
-  padding: clamp(4.5rem, 11vh, 7rem) 1.5rem 3rem;
+  padding: clamp(4.5rem, 11vh, 7rem) 1.5rem 5.5rem;
 }
 
 .home {
@@ -141,6 +141,42 @@ a:focus-visible {
 
 .prompt-mark {
   color: var(--accent);
+}
+
+.work-card {
+  position: relative;
+  margin: 2.25rem auto 0;
+  padding: 1.25rem 1.4rem 1.35rem;
+  color: var(--text);
+  text-align: left;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+}
+
+.work-card h2 {
+  margin: 0 0 0.9rem;
+  color: var(--text);
+  font-family: "VT323", "IBM Plex Mono", monospace;
+  font-size: 1.65rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: var(--glow);
+}
+
+.work-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.work-card .work-lede {
+  margin-bottom: 0.7rem;
+  color: var(--text);
+  font-weight: 500;
 }
 
 .terminal-cursor {
@@ -171,7 +207,7 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-top: 2.2rem;
+  margin-top: 1.5rem;
 }
 
 .profile-links a {
@@ -434,6 +470,14 @@ a:focus-visible {
 
   .content-shell section {
     padding: 1rem;
+  }
+
+  .work-card {
+    padding: 1rem;
+  }
+
+  .work-card p {
+    font-size: 0.85rem;
   }
 
 }
