@@ -14,23 +14,7 @@
   --accent-ink: #f7fff9;
   --glow: none;
   --scanline: rgba(23, 34, 25, 0.035);
-  --ansi-peak: #173b24;
-  --ansi-0: var(--background);
-  --ansi-1: color-mix(in srgb, var(--background) 95%, var(--ansi-peak));
-  --ansi-2: color-mix(in srgb, var(--background) 92%, var(--ansi-peak));
-  --ansi-3: color-mix(in srgb, var(--background) 88%, var(--ansi-peak));
-  --ansi-4: color-mix(in srgb, var(--background) 83%, var(--ansi-peak));
-  --ansi-5: color-mix(in srgb, var(--background) 77%, var(--ansi-peak));
-  --ansi-6: color-mix(in srgb, var(--background) 70%, var(--ansi-peak));
-  --ansi-7: color-mix(in srgb, var(--background) 62%, var(--ansi-peak));
-  --ansi-8: color-mix(in srgb, var(--background) 53%, var(--ansi-peak));
-  --ansi-9: color-mix(in srgb, var(--background) 43%, var(--ansi-peak));
-  --ansi-a: color-mix(in srgb, var(--background) 33%, var(--ansi-peak));
-  --ansi-b: color-mix(in srgb, var(--background) 24%, var(--ansi-peak));
-  --ansi-c: color-mix(in srgb, var(--background) 16%, var(--ansi-peak));
-  --ansi-d: color-mix(in srgb, var(--background) 9%, var(--ansi-peak));
-  --ansi-e: color-mix(in srgb, var(--background) 4%, var(--ansi-peak));
-  --ansi-f: var(--ansi-peak);
+  --portrait-dot: #087443;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -45,7 +29,7 @@
     --accent-ink: #001405;
     --glow: 0 0 14px rgba(85, 242, 122, 0.3);
     --scanline: rgba(85, 242, 122, 0.04);
-    --ansi-peak: #b6ffc2;
+    --portrait-dot: #9affad;
   }
 }
 
@@ -60,7 +44,7 @@
   --accent-ink: #001405;
   --glow: 0 0 14px rgba(85, 242, 122, 0.3);
   --scanline: rgba(85, 242, 122, 0.04);
-  --ansi-peak: #b6ffc2;
+  --portrait-dot: #9affad;
 }
 
 :root[data-theme="light"] {
@@ -74,7 +58,7 @@
   --accent-ink: #f7fff9;
   --glow: none;
   --scanline: rgba(23, 34, 25, 0.035);
-  --ansi-peak: #173b24;
+  --portrait-dot: #087443;
 }
 
 * {
@@ -147,66 +131,18 @@ a:focus-visible {
   text-align: center;
 }
 
-.ansi-portrait {
-  width: max-content;
+.dot-portrait {
+  width: clamp(13rem, 26vw, 15rem);
   max-width: 100%;
   margin: 0 auto 1.35rem;
-  text-align: left;
-  text-shadow: var(--glow);
 }
 
-.ansi-portrait pre {
-  width: 42ch;
-  height: 26em;
-  margin: 0;
-  overflow: hidden;
-  font-family: "IBM Plex Mono", "Lucida Console", "Courier New", monospace;
-  font-size: clamp(0.53rem, 1.2vw, 0.66rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0;
-  white-space: pre;
-}
-
-.ansi-row {
+.dot-portrait canvas {
   display: block;
-  height: 1em;
-  line-height: 1;
-  white-space: nowrap;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 96 / 105;
 }
-
-.ansi-f0 { color: var(--ansi-0); }
-.ansi-f1 { color: var(--ansi-1); }
-.ansi-f2 { color: var(--ansi-2); }
-.ansi-f3 { color: var(--ansi-3); }
-.ansi-f4 { color: var(--ansi-4); }
-.ansi-f5 { color: var(--ansi-5); }
-.ansi-f6 { color: var(--ansi-6); }
-.ansi-f7 { color: var(--ansi-7); }
-.ansi-f8 { color: var(--ansi-8); }
-.ansi-f9 { color: var(--ansi-9); }
-.ansi-fa { color: var(--ansi-a); }
-.ansi-fb { color: var(--ansi-b); }
-.ansi-fc { color: var(--ansi-c); }
-.ansi-fd { color: var(--ansi-d); }
-.ansi-fe { color: var(--ansi-e); }
-.ansi-ff { color: var(--ansi-f); }
-.ansi-b0 { background-color: var(--ansi-0); }
-.ansi-b1 { background-color: var(--ansi-1); }
-.ansi-b2 { background-color: var(--ansi-2); }
-.ansi-b3 { background-color: var(--ansi-3); }
-.ansi-b4 { background-color: var(--ansi-4); }
-.ansi-b5 { background-color: var(--ansi-5); }
-.ansi-b6 { background-color: var(--ansi-6); }
-.ansi-b7 { background-color: var(--ansi-7); }
-.ansi-b8 { background-color: var(--ansi-8); }
-.ansi-b9 { background-color: var(--ansi-9); }
-.ansi-ba { background-color: var(--ansi-a); }
-.ansi-bb { background-color: var(--ansi-b); }
-.ansi-bc { background-color: var(--ansi-c); }
-.ansi-bd { background-color: var(--ansi-d); }
-.ansi-be { background-color: var(--ansi-e); }
-.ansi-bf { background-color: var(--ansi-f); }
 
 .home h1 {
   margin: 0;
@@ -528,7 +464,7 @@ a:focus-visible {
     padding: 3.75rem 1rem 1.5rem;
   }
 
-  .ansi-portrait {
+  .dot-portrait {
     margin-bottom: 1.1rem;
   }
 
