@@ -1,4 +1,4 @@
-import { chooseGame, circleRectHit, nextSnakeHead } from './game-core.mjs';
+import { chooseGame, circleRectHit, nextSnakeHead, rectsOverlap } from './game-core.mjs';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -403,9 +403,205 @@ class VectorSnake {
   }
 }
 
+class VectorInvaders {
+  constructor() {
+    this.title = 'VECTOR INVADERS';
+    this.instructions = 'MOVE: ← → / A D   FIRE: ENTER OR SPACE   R: RANDOM GAME';
+    this.score = 0;
+    this.lives = 3;
+    this.state = 'ready';
+    this.player = { x: 380, y: 438, w: 40, h: 18 };
+    this.invaders = [];
+    this.bullets = [];
+    this.bombs = [];
+    this.bunkers = [];
+    this.direction = 1;
+    this.fireCooldown = 0;
+    this.bombTimer = 0.8;
+    this.phase = 0;
+    for (let row = 0; row < 5; row += 1) {
+      for (let column = 0; column < 10; column += 1) {
+        this.invaders.push({ x: 105 + column * 60, y: 58 + row * 38, w: 32, h: 22, row, column, alive: true });
+      }
+    }
+    for (const center of [155, 320, 485, 650]) {
+      for (let row = 0; row < 2; row += 1) {
+        for (let column = 0; column < 5; column += 1) {
+          if (row === 1 && column === 2) continue;
+          this.bunkers.push({ x: center - 35 + column * 14, y: 365 + row * 12, w: 13, h: 11, alive: true });
+        }
+      }
+    }
+  }
+
+  start() {
+    if (this.state === 'over' || this.state === 'won') Object.assign(this, new VectorInvaders());
+    this.state = 'playing';
+  }
+
+  action() {
+    if (this.state !== 'playing') {
+      this.start();
+      return;
+    }
+    if (this.fireCooldown <= 0 && this.bullets.length < 2) {
+      this.bullets.push({ x: this.player.x + this.player.w / 2 - 2, y: this.player.y - 12, w: 4, h: 14 });
+      this.fireCooldown = 0.22;
+    }
+  }
+
+  lowestInvaders() {
+    const byColumn = new Map();
+    for (const invader of this.invaders) {
+      if (!invader.alive) continue;
+      const current = byColumn.get(invader.column);
+      if (!current || invader.y > current.y) byColumn.set(invader.column, invader);
+    }
+    return [...byColumn.values()];
+  }
+
+  hitBunker(projectile) {
+    const cell = this.bunkers.find((part) => part.alive && rectsOverlap(projectile, part));
+    if (!cell) return false;
+    cell.alive = false;
+    return true;
+  }
+
+  update(dt) {
+    const move = (keys.has('ArrowRight') || keys.has('KeyD') ? 1 : 0)
+      - (keys.has('ArrowLeft') || keys.has('KeyA') ? 1 : 0);
+    this.player.x = Math.max(18, Math.min(WIDTH - 18 - this.player.w, this.player.x + move * 300 * dt));
+    this.fireCooldown = Math.max(0, this.fireCooldown - dt);
+    this.phase += dt * 6;
+    if (this.state !== 'playing') return;
+
+    const living = this.invaders.filter((invader) => invader.alive);
+    const speed = 24 + (50 - living.length) * 1.35;
+    let drop = false;
+    if (living.length) {
+      const left = Math.min(...living.map((invader) => invader.x));
+      const right = Math.max(...living.map((invader) => invader.x + invader.w));
+      drop = (this.direction < 0 && left + this.direction * speed * dt < 18)
+        || (this.direction > 0 && right + this.direction * speed * dt > WIDTH - 18);
+    }
+    if (drop) {
+      this.direction *= -1;
+      living.forEach((invader) => { invader.y += 17; });
+    } else {
+      living.forEach((invader) => { invader.x += this.direction * speed * dt; });
+    }
+
+    this.bullets.forEach((bullet) => { bullet.y -= 390 * dt; });
+    this.bombs.forEach((bomb) => { bomb.y += 205 * dt; });
+
+    for (const bullet of this.bullets) {
+      if (bullet.dead || this.hitBunker(bullet)) {
+        bullet.dead = true;
+        continue;
+      }
+      const target = this.invaders.find((invader) => invader.alive && rectsOverlap(bullet, invader));
+      if (target) {
+        target.alive = false;
+        bullet.dead = true;
+        this.score += (5 - target.row) * 50;
+      }
+    }
+
+    for (const bomb of this.bombs) {
+      if (bomb.dead || this.hitBunker(bomb)) {
+        bomb.dead = true;
+        continue;
+      }
+      if (rectsOverlap(bomb, this.player)) {
+        bomb.dead = true;
+        this.lives -= 1;
+        if (this.lives <= 0) this.state = 'over';
+      }
+    }
+
+    this.bullets = this.bullets.filter((bullet) => !bullet.dead && bullet.y + bullet.h > 0);
+    this.bombs = this.bombs.filter((bomb) => !bomb.dead && bomb.y < HEIGHT);
+    this.bombTimer -= dt;
+    if (this.bombTimer <= 0 && living.length) {
+      const shooters = this.lowestInvaders();
+      const shooter = shooters[Math.floor(Math.random() * shooters.length)];
+      this.bombs.push({ x: shooter.x + shooter.w / 2 - 2, y: shooter.y + shooter.h, w: 4, h: 13 });
+      this.bombTimer = Math.max(0.28, 1.05 - (50 - living.length) * 0.012);
+    }
+
+    if (living.some((invader) => invader.y + invader.h >= this.player.y - 8)) this.state = 'over';
+    if (this.invaders.every((invader) => !invader.alive)) this.state = 'won';
+  }
+
+  drawInvader(invader) {
+    const pulse = Math.floor(this.phase) % 2;
+    ctx.save();
+    ctx.translate(invader.x + invader.w / 2, invader.y + invader.h / 2);
+    ctx.strokeStyle = invader.row === 0 ? COLORS.bright : COLORS.phosphor;
+    ctx.lineWidth = invader.row < 2 ? 2 : 1.5;
+    ctx.shadowColor = COLORS.phosphor;
+    ctx.shadowBlur = 7;
+    ctx.beginPath();
+    if (invader.row === 0) {
+      ctx.moveTo(0, -11); ctx.lineTo(15, 0); ctx.lineTo(7, 10); ctx.lineTo(-7, 10); ctx.lineTo(-15, 0); ctx.closePath();
+      ctx.moveTo(-6, 1); ctx.lineTo(6, 1);
+    } else if (invader.row < 3) {
+      ctx.moveTo(-15, 7); ctx.lineTo(-10, -7); ctx.lineTo(0, -11); ctx.lineTo(10, -7); ctx.lineTo(15, 7);
+      ctx.moveTo(-10, -2); ctx.lineTo(10, -2); ctx.moveTo(-6, 8); ctx.lineTo(-10 - pulse * 3, 12); ctx.moveTo(6, 8); ctx.lineTo(10 + pulse * 3, 12);
+    } else {
+      ctx.moveTo(-15, 2); ctx.lineTo(-8, -9); ctx.lineTo(8, -9); ctx.lineTo(15, 2); ctx.lineTo(8, 10); ctx.lineTo(-8, 10); ctx.closePath();
+      ctx.moveTo(-5, -2); ctx.lineTo(-2, 2); ctx.moveTo(5, -2); ctx.lineTo(2, 2);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawPlayer() {
+    ctx.save();
+    ctx.translate(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2);
+    ctx.strokeStyle = COLORS.bright;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = COLORS.phosphor;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(-20, 8); ctx.lineTo(-13, -2); ctx.lineTo(-5, -2); ctx.lineTo(0, -10);
+    ctx.lineTo(5, -2); ctx.lineTo(13, -2); ctx.lineTo(20, 8); ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  draw() {
+    clearScreen();
+    ctx.strokeStyle = COLORS.dim;
+    ctx.beginPath();
+    ctx.moveTo(12, 460);
+    ctx.lineTo(WIDTH - 12, 460);
+    ctx.stroke();
+    this.invaders.filter((invader) => invader.alive).forEach((invader) => this.drawInvader(invader));
+    this.bunkers.filter((part) => part.alive).forEach((part) => {
+      ctx.strokeStyle = COLORS.dim;
+      ctx.strokeRect(part.x, part.y, part.w, part.h);
+    });
+    ctx.strokeStyle = COLORS.bright;
+    ctx.lineWidth = 2;
+    [...this.bullets, ...this.bombs].forEach((shot) => {
+      ctx.beginPath();
+      ctx.moveTo(shot.x + shot.w / 2, shot.y);
+      ctx.lineTo(shot.x + shot.w / 2, shot.y + shot.h);
+      ctx.stroke();
+    });
+    this.drawPlayer();
+    vectorText(`HOSTILES ${this.invaders.filter((invader) => invader.alive).length}`, 22, 24, 18, 'left', COLORS.dim);
+    if (this.state === 'ready') overlay('VECTOR INVADERS', 'ENTER / SPACE TO DEFEND');
+    if (this.state === 'over') overlay('SECTOR OVERRUN', 'ENTER / SPACE TO REDEPLOY');
+    if (this.state === 'won') overlay('FORMATION DESTROYED', 'ENTER / SPACE FOR ANOTHER WAVE');
+  }
+}
+
 function createGame(id = chooseGame()) {
   if (id === 'vector-break') return new VectorBreak();
   if (id === 'star-dodge') return new StarDodge();
+  if (id === 'vector-invaders') return new VectorInvaders();
   return new VectorSnake();
 }
 
@@ -416,7 +612,8 @@ function loadRandomGame() {
 }
 
 function action() {
-  currentGame.start();
+  if (typeof currentGame.action === 'function') currentGame.action();
+  else currentGame.start();
 }
 
 function frame(now) {
