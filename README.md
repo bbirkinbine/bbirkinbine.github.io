@@ -4,7 +4,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 
 ## Live site
 
-<https://bbirkinbine.github.io/>
+<https://brianbirkinbine.com/>
 
 ## Features
 
@@ -20,6 +20,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 - `index.html` — page structure, metadata, and social-profile links
 - `styles.css` — responsive VT100-inspired presentation
 - `theme.js` — system-theme detection and manual theme selection
+- `CNAME` — custom domain served by GitHub Pages
 - `.nojekyll` — direct static-file publishing through GitHub Pages
 
 ## Local preview
@@ -32,8 +33,9 @@ Then open <http://localhost:8000/>.
 
 ## Publishing
 
-GitHub Pages publishes the root of the `main` branch. The site currently uses
-the standard `bbirkinbine.github.io` address and has no custom-domain redirect.
+GitHub Pages publishes the root of the `main` branch. The site is served from the
+custom domain `brianbirkinbine.com`, configured by the `CNAME` file; the
+`bbirkinbine.github.io` address redirects there.
 
 ## Design credit
 
