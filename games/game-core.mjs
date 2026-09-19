@@ -1,8 +1,13 @@
-export const GAME_IDS = ['vector-break', 'star-dodge', 'vector-snake', 'vector-invaders'];
+export const GAME_IDS = ['vector-break', 'star-dodge', 'vector-snake', 'vector-invaders', 'vector-asteroids'];
 
 export function chooseGame(random = Math.random) {
   const index = Math.min(GAME_IDS.length - 1, Math.floor(random() * GAME_IDS.length));
   return GAME_IDS[index];
+}
+
+export function starfieldSpeed(baseSpeed, elapsedSeconds) {
+  const multiplier = 1 + Math.min(Math.max(elapsedSeconds, 0), 45) / 15;
+  return baseSpeed * multiplier;
 }
 
 export function shouldOpenArcade(event, interactiveTarget = false) {
@@ -28,6 +33,15 @@ export function rectsOverlap(a, b) {
     && a.x + a.w > b.x
     && a.y < b.y + b.h
     && a.y + a.h > b.y;
+}
+
+export function wrapPoint(point, width, height, margin = 0) {
+  let { x, y } = point;
+  if (x < -margin) x = width + margin;
+  else if (x > width + margin) x = -margin;
+  if (y < -margin) y = height + margin;
+  else if (y > height + margin) y = -margin;
+  return { x, y };
 }
 
 export function nextSnakeHead(head, direction, columns, rows) {

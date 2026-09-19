@@ -1,4 +1,4 @@
-import { chooseGame, circleRectHit, nextSnakeHead, rectsOverlap } from './game-core.mjs';
+import { chooseGame, circleRectHit, nextSnakeHead, rectsOverlap, starfieldSpeed, wrapPoint } from './game-core.mjs?v=20260919-2';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -238,7 +238,7 @@ class StarDodge {
 
   update(dt) {
     for (const star of this.stars) {
-      star.y += star.speed * dt;
+      star.y += starfieldSpeed(star.speed, this.elapsed) * dt;
       if (star.y > HEIGHT) {
         star.y = 0;
         star.x = Math.random() * WIDTH;
@@ -400,6 +400,248 @@ class VectorSnake {
     ctx.restore();
     if (this.state === 'ready') overlay('VECTOR SNAKE', 'ENTER / SPACE TO INITIALIZE');
     if (this.state === 'over') overlay('TAIL COLLISION', 'ENTER / SPACE TO REBOOT');
+  }
+}
+
+class VectorAsteroids {
+  constructor() {
+    this.title = 'VECTOR ASTEROIDS';
+    this.instructions = 'TURN: ← → / A D   THRUST: ↑ / W   FIRE: ENTER OR SPACE';
+    this.score = 0;
+    this.lives = 3;
+    this.state = 'ready';
+    this.wave = 1;
+    this.ship = { x: WIDTH / 2, y: HEIGHT / 2, vx: 0, vy: 0, angle: -Math.PI / 2, r: 12 };
+    this.shots = [];
+    this.rocks = [];
+    this.sparks = [];
+    this.cooldown = 0;
+    this.invulnerable = 2;
+    this.stars = Array.from({ length: 55 }, (_, index) => ({
+      x: (index * 149 + 37) % WIDTH,
+      y: (index * 83 + 19) % HEIGHT,
+      bright: index % 5 === 0,
+    }));
+    this.spawnWave();
+  }
+
+  createRock(x, y, size = 3, inheritedVelocity) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 24 + Math.random() * 38 + this.wave * 3;
+    const radius = size === 3 ? 38 : size === 2 ? 24 : 13;
+    const velocity = inheritedVelocity || { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
+    return {
+      x, y, size, r: radius,
+      vx: velocity.vx,
+      vy: velocity.vy,
+      angle: Math.random() * Math.PI,
+      spin: (Math.random() - 0.5) * 1.4,
+      shape: Array.from({ length: 10 }, () => 0.68 + Math.random() * 0.34),
+      dead: false,
+    };
+  }
+
+  spawnWave() {
+    const count = Math.min(8, 3 + this.wave);
+    for (let index = 0; index < count; index += 1) {
+      const edge = index % 4;
+      const x = edge === 0 ? 45 : edge === 1 ? WIDTH - 45 : 60 + Math.random() * (WIDTH - 120);
+      const y = edge === 2 ? 45 : edge === 3 ? HEIGHT - 45 : 50 + Math.random() * (HEIGHT - 100);
+      this.rocks.push(this.createRock(x, y, 3));
+    }
+  }
+
+  start() {
+    if (this.state === 'over') Object.assign(this, new VectorAsteroids());
+    this.state = 'playing';
+  }
+
+  action() {
+    if (this.state !== 'playing') {
+      this.start();
+      return;
+    }
+    if (this.cooldown > 0 || this.shots.length >= 6) return;
+    const noseX = Math.cos(this.ship.angle);
+    const noseY = Math.sin(this.ship.angle);
+    this.shots.push({
+      x: this.ship.x + noseX * 17,
+      y: this.ship.y + noseY * 17,
+      vx: this.ship.vx + noseX * 420,
+      vy: this.ship.vy + noseY * 420,
+      ttl: 1.15,
+    });
+    this.cooldown = 0.16;
+  }
+
+  explode(x, y, count = 9) {
+    for (let index = 0; index < count; index += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 35 + Math.random() * 90;
+      this.sparks.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, ttl: 0.35 + Math.random() * 0.45 });
+    }
+  }
+
+  splitRock(rock) {
+    rock.dead = true;
+    this.score += rock.size === 3 ? 100 : rock.size === 2 ? 200 : 400;
+    this.explode(rock.x, rock.y, 5 + rock.size * 3);
+    if (rock.size <= 1) return;
+    for (const direction of [-1, 1]) {
+      const speed = Math.hypot(rock.vx, rock.vy) * 1.25 + 18;
+      const angle = Math.atan2(rock.vy, rock.vx) + direction * (0.55 + Math.random() * 0.3);
+      this.rocks.push(this.createRock(rock.x, rock.y, rock.size - 1, {
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+      }));
+    }
+  }
+
+  resetShip() {
+    this.ship = { x: WIDTH / 2, y: HEIGHT / 2, vx: 0, vy: 0, angle: -Math.PI / 2, r: 12 };
+    this.invulnerable = 2.5;
+  }
+
+  update(dt) {
+    this.cooldown = Math.max(0, this.cooldown - dt);
+    this.invulnerable = Math.max(0, this.invulnerable - dt);
+    if (this.state !== 'playing') return;
+
+    const turn = (keys.has('ArrowRight') || keys.has('KeyD') ? 1 : 0)
+      - (keys.has('ArrowLeft') || keys.has('KeyA') ? 1 : 0);
+    this.ship.angle += turn * 3.5 * dt;
+    const thrusting = keys.has('ArrowUp') || keys.has('KeyW');
+    if (thrusting) {
+      this.ship.vx += Math.cos(this.ship.angle) * 175 * dt;
+      this.ship.vy += Math.sin(this.ship.angle) * 175 * dt;
+    }
+    if (keys.has('ArrowDown') || keys.has('KeyS')) {
+      this.ship.vx *= Math.pow(0.08, dt);
+      this.ship.vy *= Math.pow(0.08, dt);
+    }
+    const speed = Math.hypot(this.ship.vx, this.ship.vy);
+    if (speed > 280) {
+      this.ship.vx = (this.ship.vx / speed) * 280;
+      this.ship.vy = (this.ship.vy / speed) * 280;
+    }
+    this.ship.vx *= Math.pow(0.985, dt * 60);
+    this.ship.vy *= Math.pow(0.985, dt * 60);
+    this.ship.x += this.ship.vx * dt;
+    this.ship.y += this.ship.vy * dt;
+    Object.assign(this.ship, wrapPoint(this.ship, WIDTH, HEIGHT, 16));
+
+    for (const shot of this.shots) {
+      shot.x += shot.vx * dt;
+      shot.y += shot.vy * dt;
+      shot.ttl -= dt;
+      Object.assign(shot, wrapPoint(shot, WIDTH, HEIGHT, 2));
+    }
+    for (const rock of this.rocks) {
+      rock.x += rock.vx * dt;
+      rock.y += rock.vy * dt;
+      rock.angle += rock.spin * dt;
+      Object.assign(rock, wrapPoint(rock, WIDTH, HEIGHT, rock.r));
+    }
+    for (const spark of this.sparks) {
+      spark.x += spark.vx * dt;
+      spark.y += spark.vy * dt;
+      spark.ttl -= dt;
+    }
+
+    for (const shot of this.shots) {
+      if (shot.dead) continue;
+      const rock = this.rocks.find((candidate) => !candidate.dead && Math.hypot(candidate.x - shot.x, candidate.y - shot.y) < candidate.r + 3);
+      if (rock) {
+        shot.dead = true;
+        this.splitRock(rock);
+      }
+    }
+
+    if (this.invulnerable <= 0) {
+      const collision = this.rocks.find((rock) => !rock.dead && Math.hypot(rock.x - this.ship.x, rock.y - this.ship.y) < rock.r + this.ship.r);
+      if (collision) {
+        this.explode(this.ship.x, this.ship.y, 18);
+        collision.dead = true;
+        this.lives -= 1;
+        if (this.lives <= 0) this.state = 'over';
+        else this.resetShip();
+      }
+    }
+
+    this.shots = this.shots.filter((shot) => !shot.dead && shot.ttl > 0);
+    this.rocks = this.rocks.filter((rock) => !rock.dead);
+    this.sparks = this.sparks.filter((spark) => spark.ttl > 0);
+    if (this.state === 'playing' && this.rocks.length === 0) {
+      this.wave += 1;
+      this.invulnerable = Math.max(this.invulnerable, 1.2);
+      this.spawnWave();
+    }
+  }
+
+  drawRock(rock) {
+    ctx.save();
+    ctx.translate(rock.x, rock.y);
+    ctx.rotate(rock.angle);
+    ctx.strokeStyle = rock.size === 3 ? COLORS.dim : COLORS.phosphor;
+    ctx.lineWidth = rock.size === 1 ? 1.5 : 2;
+    ctx.shadowColor = COLORS.phosphor;
+    ctx.shadowBlur = rock.size === 1 ? 8 : 4;
+    ctx.beginPath();
+    rock.shape.forEach((scale, index) => {
+      const angle = (index / rock.shape.length) * Math.PI * 2;
+      const x = Math.cos(angle) * rock.r * scale;
+      const y = Math.sin(angle) * rock.r * scale;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawShip() {
+    if (this.invulnerable > 0 && Math.floor(this.invulnerable * 10) % 2) return;
+    const thrusting = keys.has('ArrowUp') || keys.has('KeyW');
+    ctx.save();
+    ctx.translate(this.ship.x, this.ship.y);
+    ctx.rotate(this.ship.angle + Math.PI / 2);
+    ctx.strokeStyle = COLORS.bright;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = COLORS.phosphor;
+    ctx.shadowBlur = 9;
+    ctx.beginPath();
+    ctx.moveTo(0, -16); ctx.lineTo(11, 13); ctx.lineTo(0, 8); ctx.lineTo(-11, 13); ctx.closePath();
+    ctx.stroke();
+    if (thrusting) {
+      ctx.strokeStyle = COLORS.dim;
+      ctx.beginPath();
+      ctx.moveTo(-5, 11); ctx.lineTo(0, 24 + Math.random() * 5); ctx.lineTo(5, 11); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  draw() {
+    clearScreen();
+    this.stars.forEach((star) => {
+      ctx.fillStyle = star.bright ? COLORS.dim : COLORS.faint;
+      ctx.fillRect(star.x, star.y, 1, star.bright ? 2 : 1);
+    });
+    this.rocks.forEach((rock) => this.drawRock(rock));
+    ctx.strokeStyle = COLORS.bright;
+    ctx.lineWidth = 2;
+    this.shots.forEach((shot) => {
+      ctx.beginPath(); ctx.arc(shot.x, shot.y, 2.5, 0, Math.PI * 2); ctx.stroke();
+    });
+    this.sparks.forEach((spark) => {
+      ctx.globalAlpha = Math.min(1, spark.ttl * 2);
+      ctx.fillStyle = COLORS.phosphor;
+      ctx.fillRect(spark.x, spark.y, 2, 2);
+    });
+    ctx.globalAlpha = 1;
+    this.drawShip();
+    vectorText(`WAVE ${this.wave}`, 22, 24, 18, 'left', COLORS.dim);
+    if (this.state === 'ready') overlay('VECTOR ASTEROIDS', 'ENTER / SPACE TO LAUNCH');
+    if (this.state === 'over') overlay('SHIP LOST', 'ENTER / SPACE TO REBUILD');
   }
 }
 
@@ -602,6 +844,7 @@ function createGame(id = chooseGame()) {
   if (id === 'vector-break') return new VectorBreak();
   if (id === 'star-dodge') return new StarDodge();
   if (id === 'vector-invaders') return new VectorInvaders();
+  if (id === 'vector-asteroids') return new VectorAsteroids();
   return new VectorSnake();
 }
 
