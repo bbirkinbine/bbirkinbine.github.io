@@ -114,6 +114,8 @@ a:focus-visible {
 }
 
 .home-page {
+  display: flex;
+  flex-direction: column;
   padding: clamp(4.5rem, 11vh, 7rem) 1.5rem 3rem;
 }
 
@@ -206,6 +208,21 @@ a:focus-visible {
 .profile-links .icon-dot {
   fill: currentColor;
   stroke: none;
+}
+
+.site-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 3rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .theme-toggle {
