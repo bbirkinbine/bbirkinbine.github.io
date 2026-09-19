@@ -12,7 +12,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 - Plain-language privacy policy and terms of use
 - System-aware light and dark themes with a persistent manual toggle
 - Green-phosphor terminal styling, subtle scanlines, and responsive layout
-- Responsive ANSI half-block portrait derived from Brian's headshot without publishing the source photo
+- Responsive 16-level ANSI half-block portrait derived from Brian's headshot without publishing the source photo
 - Accessible labels and reduced-motion support
 - Hidden monochrome vector arcade at `/games/`, opened by pressing Enter on the homepage
 - No tracking, build system, or runtime dependencies
