@@ -1,4 +1,4 @@
-import { shouldOpenArcade } from './games/game-core.mjs?v=20260923-7';
+import { shouldOpenArcade } from './games/game-core.mjs?v=20260923-8';
 
 window.addEventListener('keydown', (event) => {
   const target = event.target;
@@ -7,6 +7,6 @@ window.addEventListener('keydown', (event) => {
 
   if (!event.defaultPrevented && shouldOpenArcade(event, interactiveTarget)) {
     event.preventDefault();
-    window.location.assign('/games/?v=20260923-7');
+    window.location.assign('/games/?v=20260923-8');
   }
 });

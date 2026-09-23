@@ -11,8 +11,10 @@ import {
   circleRectBounceAxis,
   circleRectHit,
   createVectorBreakBricks,
+  estimateLanderFuelUse,
   isVectorBreakLevelClear,
   isSafeLanderTouchdown,
+  landerCameraTarget,
   nextMenuGridIndex,
   nextSnakeHead,
   rectsOverlap,
@@ -43,10 +45,16 @@ test('Escape opens the menu from a game and returns home from the menu', () => {
 });
 
 test('Vector Lander missions contain ordered terrain and reachable landing pads', () => {
-  assert.equal(VECTOR_LANDER_MISSIONS.length, 3);
+  assert.equal(VECTOR_LANDER_MISSIONS.length, 6);
+  assert.equal(new Set(VECTOR_LANDER_MISSIONS.map((mission) => mission.name)).size, 6);
+  assert.ok(new Set(VECTOR_LANDER_MISSIONS.map((mission) => mission.terrain.at(-1).x)).size >= 4);
   VECTOR_LANDER_MISSIONS.forEach((mission) => {
     assert.ok(mission.name);
     assert.ok(mission.gravity > 0);
+    assert.ok(mission.fuel >= estimateLanderFuelUse(mission) * 1.5);
+    assert.ok(mission.terrain.at(-1).x > 800);
+    assert.ok(mission.start.x > 0 && mission.start.x < mission.terrain.at(-1).x);
+    assert.ok(mission.pad.x > 0 && mission.pad.x + mission.pad.w < mission.terrain.at(-1).x);
     assert.ok(mission.terrain.length >= 2);
     for (let index = 1; index < mission.terrain.length; index += 1) {
       assert.ok(mission.terrain[index].x > mission.terrain[index - 1].x);
@@ -54,6 +62,24 @@ test('Vector Lander missions contain ordered terrain and reachable landing pads'
     assert.equal(terrainHeightAtX(mission.terrain, mission.pad.x), mission.pad.y);
     assert.equal(terrainHeightAtX(mission.terrain, mission.pad.x + mission.pad.w), mission.pad.y);
   });
+});
+
+test('Vector Lander camera starts wide and closes in near the landing pad', () => {
+  const mission = VECTOR_LANDER_MISSIONS[4];
+  const startCamera = landerCameraTarget({ ...mission.start, vy: 0, angle: 0, r: 13 }, mission);
+  const approachCamera = landerCameraTarget({
+    x: mission.pad.x + mission.pad.w / 2,
+    y: mission.pad.y - 70,
+    vx: 0,
+    vy: 30,
+    angle: 0,
+    r: 13,
+  }, mission);
+
+  assert.ok(startCamera.zoom < 0.6);
+  assert.ok(approachCamera.zoom > 1);
+  assert.ok(approachCamera.zoom > startCamera.zoom + 0.5);
+  assert.ok(approachCamera.altitude < startCamera.altitude);
 });
 
 test('Vector Lander interpolates terrain and enforces safe touchdown limits', () => {
@@ -147,7 +173,7 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260923-7/);
+  assert.match(homepage, /easter-egg\.mjs\?v=20260923-8/);
 });
 
 test('the arcade build uses one version across its page and launchers', async () => {

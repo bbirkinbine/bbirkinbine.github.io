@@ -15,7 +15,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 - Responsive 96×105 halftone dot portrait derived from Brian's headshot without publishing the source photo
 - Accessible labels and reduced-motion support
 - Hidden monochrome vector arcade with a five-game selector at `/games/`, opened by pressing Enter on the homepage
-- Vector Lander casual mode with an `F` hotkey to toggle unlimited fuel
+- Vector Lander with six fuel-balanced terrains, dynamic approach zoom, and an `F` hotkey for unlimited-fuel casual mode
 - No tracking, build system, or runtime dependencies
 
 ## Project files

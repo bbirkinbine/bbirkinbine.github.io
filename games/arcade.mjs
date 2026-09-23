@@ -8,12 +8,13 @@ import {
   createVectorBreakBricks,
   isVectorBreakLevelClear,
   isSafeLanderTouchdown,
+  landerCameraTarget,
   nextMenuGridIndex,
   nextSnakeHead,
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260923-7';
+} from './game-core.mjs?v=20260923-8';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -380,17 +381,30 @@ class VectorLander {
   loadMission() {
     const missionIndex = (this.mission - 1) % VECTOR_LANDER_MISSIONS.length;
     const cycle = Math.floor((this.mission - 1) / VECTOR_LANDER_MISSIONS.length);
+    const difficultyStep = Math.min(cycle, 4);
     this.currentMission = VECTOR_LANDER_MISSIONS[missionIndex];
-    this.gravity = this.currentMission.gravity + cycle * 3;
+    this.gravity = this.currentMission.gravity + difficultyStep * 2;
+    this.fuelCapacity = this.currentMission.fuel + difficultyStep * 8;
     this.resetShip();
   }
 
   resetShip() {
     const { start } = this.currentMission;
     this.ship = { x: start.x, y: start.y, vx: start.vx, vy: 0, angle: 0, r: 13 };
-    this.fuel = 100;
+    this.worldWidth = this.currentMission.terrain.at(-1).x;
+    this.fuel = this.fuelCapacity;
     this.thrusting = false;
     this.state = 'ready';
+    this.camera = landerCameraTarget(this.ship, this.currentMission, { width: WIDTH, height: HEIGHT });
+  }
+
+  updateCamera(dt) {
+    const target = landerCameraTarget(this.ship, this.currentMission, { width: WIDTH, height: HEIGHT });
+    const blend = 1 - Math.exp(-3.5 * dt);
+    this.camera.x += (target.x - this.camera.x) * blend;
+    this.camera.y += (target.y - this.camera.y) * blend;
+    this.camera.zoom += (target.zoom - this.camera.zoom) * blend;
+    this.camera.altitude = target.altitude;
   }
 
   start() {
@@ -427,9 +441,10 @@ class VectorLander {
     this.ship.vy += this.gravity * dt;
     this.ship.x += this.ship.vx * dt;
     this.ship.y += this.ship.vy * dt;
+    this.updateCamera(dt);
 
-    if (this.ship.x < 18 || this.ship.x > WIDTH - 18) {
-      this.ship.x = Math.max(18, Math.min(WIDTH - 18, this.ship.x));
+    if (this.ship.x < 18 || this.ship.x > this.worldWidth - 18) {
+      this.ship.x = Math.max(18, Math.min(this.worldWidth - 18, this.ship.x));
       this.ship.vx *= -0.35;
     }
     if (this.ship.y < 24) {
@@ -492,6 +507,9 @@ class VectorLander {
     clearScreen();
     const { terrain, pad, name } = this.currentMission;
     ctx.save();
+    ctx.translate(WIDTH / 2, HEIGHT / 2);
+    ctx.scale(this.camera.zoom, this.camera.zoom);
+    ctx.translate(-this.camera.x, -this.camera.y);
     ctx.strokeStyle = COLORS.dim;
     ctx.lineWidth = 2;
     ctx.shadowColor = COLORS.phosphor;
@@ -516,16 +534,15 @@ class VectorLander {
       ctx.lineTo(x, pad.y + 8);
       ctx.stroke();
     }
-    ctx.restore();
-
     this.drawShip();
+    ctx.restore();
     vectorText(`MISSION ${String(this.mission).padStart(2, '0')}  ${name}`, 22, 24, 18, 'left', COLORS.dim);
     const fuelLabel = this.unlimitedFuel
       ? 'FUEL INF'
       : `FUEL ${Math.ceil(this.fuel).toString().padStart(3, '0')}`;
     vectorText(fuelLabel, WIDTH - 22, 24, 18, 'right', this.unlimitedFuel || this.fuel < 20 ? COLORS.bright : COLORS.dim);
     vectorText(
-      `H/S ${Math.abs(this.ship.vx).toFixed(0).padStart(3, '0')}  V/S ${Math.max(0, this.ship.vy).toFixed(0).padStart(3, '0')}  ANG ${Math.round(Math.abs(this.ship.angle) * 180 / Math.PI).toString().padStart(2, '0')}°`,
+      `H/S ${Math.abs(this.ship.vx).toFixed(0).padStart(3, '0')}  V/S ${Math.max(0, this.ship.vy).toFixed(0).padStart(3, '0')}  ALT ${Math.ceil(this.camera.altitude).toString().padStart(3, '0')}  ANG ${Math.round(Math.abs(this.ship.angle) * 180 / Math.PI).toString().padStart(2, '0')}°`,
       22,
       48,
       16,
