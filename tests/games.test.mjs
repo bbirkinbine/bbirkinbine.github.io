@@ -6,6 +6,7 @@ import {
   GAME_IDS,
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  burnLanderFuel,
   circleRectBounceAxis,
   circleRectHit,
   createVectorBreakBricks,
@@ -57,6 +58,13 @@ test('Vector Lander interpolates terrain and enforces safe touchdown limits', ()
   assert.equal(isSafeLanderTouchdown({ ...safeShip, vy: 60 }, pad), false);
   assert.equal(isSafeLanderTouchdown({ ...safeShip, angle: 0.4 }, pad), false);
   assert.equal(isSafeLanderTouchdown({ ...safeShip, x: 105 }, pad), false);
+});
+
+test('Vector Lander unlimited fuel mode preserves the current fuel reserve', () => {
+  assert.equal(burnLanderFuel(75, 14, false), 61);
+  assert.equal(burnLanderFuel(8, 14, false), 0);
+  assert.equal(burnLanderFuel(0, 14, true), 0);
+  assert.equal(burnLanderFuel(75, 14, true), 75);
 });
 
 test('Vector Break provides six valid, distinct level layouts', () => {
@@ -133,17 +141,42 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs/);
+  assert.match(homepage, /easter-egg\.mjs\?v=20260923-6/);
 });
 
-test('the unlinked games page exposes a canvas and the five-game selector', async () => {
+test('the arcade build uses one version across its page and launchers', async () => {
+  const version = JSON.parse(await readFile(new URL('../games/version.json', import.meta.url), 'utf8')).version;
+  const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const launcher = await readFile(new URL('../easter-egg.mjs', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../games/index.html', import.meta.url), 'utf8');
+  const arcade = await readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8');
+
+  assert.ok(version);
+  assert.match(homepage, new RegExp(`easter-egg\\.mjs\\?v=${version}`));
+  assert.match(launcher, new RegExp(`game-core\\.mjs\\?v=${version}`));
+  assert.match(launcher, new RegExp(`/games/\\?v=${version}`));
+  assert.match(page, new RegExp(`renderedVersion = '${version}'`));
+  assert.match(page, new RegExp(`arcade\\.mjs\\?v=${version}`));
+  assert.match(arcade, new RegExp(`game-core\\.mjs\\?v=${version}`));
+});
+
+test('the unlinked games page exposes a cache refresh check and the five-game selector', async () => {
   const page = await readFile(new URL('../games/index.html', import.meta.url), 'utf8');
   assert.match(page, /<canvas[^>]+id="game-canvas"/);
   assert.match(page, /<nav[^>]+id="game-menu"/);
+  assert.match(page, /version\.json/);
+  assert.match(page, /cache: 'no-store'/);
+  assert.match(page, /VECTOR LANDER/);
   assert.match(page, /VECTOR BREAK/);
   assert.match(page, /VECTOR SNAKE/);
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
-  assert.match(page, /VECTOR LANDER/);
   assert.doesNotMatch(page, /STAR DODGE/);
+});
+
+test('Vector Lander exposes an unlimited fuel hotkey and status display', async () => {
+  const arcade = await readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8');
+  assert.match(arcade, /event\.code === 'KeyF'/);
+  assert.match(arcade, /F: FUEL \$\{fuelMode\}/);
+  assert.match(arcade, /FUEL INF/);
 });

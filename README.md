@@ -15,6 +15,7 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 - Responsive 96×105 halftone dot portrait derived from Brian's headshot without publishing the source photo
 - Accessible labels and reduced-motion support
 - Hidden monochrome vector arcade with a five-game selector at `/games/`, opened by pressing Enter on the homepage
+- Vector Lander casual mode with an `F` hotkey to toggle unlimited fuel
 - No tracking, build system, or runtime dependencies
 
 ## Project files
@@ -38,6 +39,12 @@ Then open <http://localhost:8000/>.
 GitHub Pages publishes the root of the `main` branch. The site is served from the
 custom domain `brianbirkinbine.com`, configured by the `CNAME` file; the
 `bbirkinbine.github.io` address redirects there.
+
+GitHub Pages may cache a deployed page for up to ten minutes. The arcade checks
+`games/version.json` with a cache-busting request and reloads a versioned `/games/`
+URL when a newer build is available. Update that version together with the arcade
+asset query strings whenever the game code changes. During development, use a
+hard reload (`Command+Shift+R` on macOS or `Ctrl+Shift+R` on Windows/Linux).
 
 ## Design credit
 

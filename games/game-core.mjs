@@ -188,6 +188,10 @@ export function isSafeLanderTouchdown(ship, pad, limits = {}) {
     && Math.abs(ship.angle) <= maxAngle;
 }
 
+export function burnLanderFuel(fuel, amount, unlimitedFuel = false) {
+  return unlimitedFuel ? fuel : Math.max(0, fuel - amount);
+}
+
 export function shouldOpenArcade(event, interactiveTarget = false) {
   return event.key === 'Enter'
     && !event.repeat

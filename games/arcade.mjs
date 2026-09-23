@@ -1,6 +1,7 @@
 import {
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  burnLanderFuel,
   circleRectBounceAxis,
   circleRectHit,
   createVectorBreakBricks,
@@ -11,7 +12,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260923-4';
+} from './game-core.mjs?v=20260923-6';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -355,13 +356,24 @@ class VectorLander {
   constructor() {
     this.title = 'VECTOR LANDER';
     this.actionLabel = 'START';
-    this.instructions = 'ROTATE: ← → / A D   THRUST: ↑ / W   START: ENTER / SPACE   M / ESC: MENU';
+    this.unlimitedFuel = false;
+    this.updateInstructions();
     this.score = 0;
     this.lives = 3;
     this.state = 'ready';
     this.mission = 1;
     this.landingBonus = 0;
     this.loadMission();
+  }
+
+  updateInstructions() {
+    const fuelMode = this.unlimitedFuel ? 'UNLIMITED' : 'LIMITED';
+    this.instructions = `ROTATE: ← → / A D   THRUST: ↑ / W   F: FUEL ${fuelMode}   M / ESC: MENU`;
+  }
+
+  toggleUnlimitedFuel() {
+    this.unlimitedFuel = !this.unlimitedFuel;
+    this.updateInstructions();
   }
 
   loadMission() {
@@ -382,7 +394,10 @@ class VectorLander {
 
   start() {
     if (this.state === 'over') {
+      const { unlimitedFuel } = this;
       Object.assign(this, new VectorLander());
+      this.unlimitedFuel = unlimitedFuel;
+      this.updateInstructions();
     } else if (this.state === 'landed') {
       this.mission += 1;
       this.loadMission();
@@ -400,11 +415,11 @@ class VectorLander {
       - (keys.has('ArrowLeft') || keys.has('KeyA') ? 1 : 0);
     this.ship.angle = Math.max(-1.35, Math.min(1.35, this.ship.angle + turn * 2.25 * dt));
 
-    if ((keys.has('ArrowUp') || keys.has('KeyW')) && this.fuel > 0) {
+    if ((keys.has('ArrowUp') || keys.has('KeyW')) && (this.unlimitedFuel || this.fuel > 0)) {
       const thrust = 105;
       this.ship.vx += Math.sin(this.ship.angle) * thrust * dt;
       this.ship.vy -= Math.cos(this.ship.angle) * thrust * dt;
-      this.fuel = Math.max(0, this.fuel - 14 * dt);
+      this.fuel = burnLanderFuel(this.fuel, 14 * dt, this.unlimitedFuel);
       this.thrusting = true;
     }
 
@@ -504,7 +519,10 @@ class VectorLander {
 
     this.drawShip();
     vectorText(`MISSION ${String(this.mission).padStart(2, '0')}  ${name}`, 22, 24, 18, 'left', COLORS.dim);
-    vectorText(`FUEL ${Math.ceil(this.fuel).toString().padStart(3, '0')}`, WIDTH - 22, 24, 18, 'right', this.fuel < 20 ? COLORS.bright : COLORS.dim);
+    const fuelLabel = this.unlimitedFuel
+      ? 'FUEL INF'
+      : `FUEL ${Math.ceil(this.fuel).toString().padStart(3, '0')}`;
+    vectorText(fuelLabel, WIDTH - 22, 24, 18, 'right', this.unlimitedFuel || this.fuel < 20 ? COLORS.bright : COLORS.dim);
     vectorText(
       `H/S ${Math.abs(this.ship.vx).toFixed(0).padStart(3, '0')}  V/S ${Math.max(0, this.ship.vy).toFixed(0).padStart(3, '0')}  ANG ${Math.round(Math.abs(this.ship.angle) * 180 / Math.PI).toString().padStart(2, '0')}°`,
       22,
@@ -1060,6 +1078,18 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (event.code === 'Enter' || event.code === 'Space') action();
+  if (
+    event.code === 'KeyF'
+    && !event.repeat
+    && !event.altKey
+    && !event.ctrlKey
+    && !event.metaKey
+    && typeof currentGame?.toggleUnlimitedFuel === 'function'
+  ) {
+    event.preventDefault();
+    currentGame.toggleUnlimitedFuel();
+    return;
+  }
   keys.add(event.code);
 });
 
