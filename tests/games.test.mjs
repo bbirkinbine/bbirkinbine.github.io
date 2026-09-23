@@ -6,6 +6,7 @@ import {
   GAME_IDS,
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  arcadeEscapeAction,
   burnLanderFuel,
   circleRectBounceAxis,
   circleRectHit,
@@ -34,6 +35,11 @@ test('the game menu navigates its two-column grid in every direction', () => {
   assert.equal(nextMenuGridIndex(3, 'down', 5), 1);
   assert.equal(nextMenuGridIndex(4, 'right', 5), 4);
   assert.equal(nextMenuGridIndex(4, 'down', 5), 0);
+});
+
+test('Escape opens the menu from a game and returns home from the menu', () => {
+  assert.equal(arcadeEscapeAction(false), 'menu');
+  assert.equal(arcadeEscapeAction(true), 'home');
 });
 
 test('Vector Lander missions contain ordered terrain and reachable landing pads', () => {
@@ -141,7 +147,7 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260923-6/);
+  assert.match(homepage, /easter-egg\.mjs\?v=20260923-7/);
 });
 
 test('the arcade build uses one version across its page and launchers', async () => {
@@ -166,6 +172,7 @@ test('the unlinked games page exposes a cache refresh check and the five-game se
   assert.match(page, /<nav[^>]+id="game-menu"/);
   assert.match(page, /version\.json/);
   assert.match(page, /cache: 'no-store'/);
+  assert.match(page, /ESC TO RETURN HOME/);
   assert.match(page, /VECTOR LANDER/);
   assert.match(page, /VECTOR BREAK/);
   assert.match(page, /VECTOR SNAKE/);

@@ -1,6 +1,7 @@
 import {
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  arcadeEscapeAction,
   burnLanderFuel,
   circleRectBounceAxis,
   circleRectHit,
@@ -12,7 +13,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260923-6';
+} from './game-core.mjs?v=20260923-7';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -1001,7 +1002,7 @@ function showMenu() {
   gameMenuButton.hidden = true;
   hudEl.hidden = true;
   titleEl.textContent = 'SELECT GAME';
-  instructionsEl.textContent = 'SELECT: ARROWS / WASD   PLAY: ENTER OR SPACE';
+  instructionsEl.textContent = 'SELECT: ARROWS / WASD   PLAY: ENTER OR SPACE   ESC: RETURN HOME';
   drawMenuBackdrop();
   const selectedButton = gameButtons.find((button) => button.getAttribute('aria-current') === 'true');
   (selectedButton || gameButtons[0]).focus({ preventScroll: true });
@@ -1049,7 +1050,13 @@ function moveMenuFocus(direction) {
 
 window.addEventListener('keydown', (event) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(event.code)) event.preventDefault();
-  if (event.code === 'Escape' || event.code === 'KeyM') {
+  if (event.code === 'Escape') {
+    event.preventDefault();
+    if (arcadeEscapeAction(!gameMenu.hidden) === 'home') window.location.assign('/');
+    else showMenu();
+    return;
+  }
+  if (event.code === 'KeyM') {
     showMenu();
     return;
   }

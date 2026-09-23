@@ -162,6 +162,10 @@ export function nextMenuGridIndex(currentIndex, direction, itemCount, columns = 
   return safeIndex;
 }
 
+export function arcadeEscapeAction(menuOpen) {
+  return menuOpen ? 'home' : 'menu';
+}
+
 export function terrainHeightAtX(terrain, x) {
   if (x <= terrain[0].x) return terrain[0].y;
   for (let index = 1; index < terrain.length; index += 1) {
