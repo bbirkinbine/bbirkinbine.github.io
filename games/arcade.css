@@ -79,6 +79,10 @@ h1 {
   white-space: nowrap;
 }
 
+.hud[hidden] {
+  display: none;
+}
+
 .hud strong {
   color: var(--bright);
   font-weight: 500;
@@ -114,6 +118,93 @@ canvas {
   background:
     repeating-linear-gradient(to bottom, transparent 0, transparent 3px, var(--glass) 4px),
     radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.48) 100%);
+}
+
+.game-menu {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.25rem, 5vw, 4rem);
+  background: rgba(2, 5, 3, 0.88);
+}
+
+.game-menu[hidden] {
+  display: none;
+}
+
+.menu-prompt {
+  margin: 0 0 0.75rem;
+  color: var(--bright);
+  font-family: "VT323", "IBM Plex Mono", monospace;
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(102, 255, 136, 0.35);
+}
+
+.game-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.game-list button {
+  min-height: 5.2rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--phosphor);
+  text-align: left;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--dim);
+  border-radius: 0;
+  background: rgba(3, 16, 7, 0.92);
+}
+
+.game-list button:hover,
+.game-list button:focus-visible {
+  color: #001405;
+  background: var(--phosphor);
+  border-color: var(--phosphor);
+  outline: none;
+}
+
+.game-list strong,
+.game-list span {
+  display: block;
+}
+
+.game-list strong {
+  color: var(--bright);
+  font-family: "VT323", "IBM Plex Mono", monospace;
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.game-list button:hover strong,
+.game-list button:focus-visible strong {
+  color: #001405;
+}
+
+.game-list span {
+  margin-top: 0.25rem;
+  color: var(--dim);
+  font-size: clamp(0.58rem, 1.6vw, 0.7rem);
+}
+
+.game-list button:hover span,
+.game-list button:focus-visible span {
+  color: #063f17;
+}
+
+.menu-help {
+  margin: 0.8rem 0 0;
+  color: var(--dim);
+  font-size: clamp(0.55rem, 1.7vw, 0.7rem);
+  text-align: center;
 }
 
 .cabinet-controls {
@@ -166,6 +257,10 @@ canvas {
   grid-column: span 1;
 }
 
+.menu-open .touch-controls {
+  display: none;
+}
+
 @media (max-width: 700px), (pointer: coarse) {
   body {
     padding: 1rem;
@@ -189,6 +284,25 @@ canvas {
 
   .touch-controls {
     display: grid;
+  }
+
+  .game-menu {
+    padding: 1rem;
+  }
+
+  .game-list button {
+    min-height: 4.25rem;
+    padding: 0.55rem 0.65rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .game-list {
+    gap: 0.4rem;
+  }
+
+  .game-list span {
+    display: none;
   }
 }
 

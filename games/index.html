@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>Arcade Interrupt | Brian Birkinbine</title>
-    <meta name="description" content="A hidden monochrome arcade cabinet featuring VECTOR BREAK, STAR DODGE, VECTOR SNAKE, VECTOR INVADERS, and VECTOR ASTEROIDS." />
+    <meta name="description" content="A hidden monochrome arcade cabinet featuring VECTOR BREAK, VECTOR SNAKE, VECTOR INVADERS, and VECTOR ASTEROIDS." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=VT323&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="arcade.css?v=20260919-1" />
-    <script type="module" src="arcade.mjs?v=20260919-3"></script>
+    <link rel="stylesheet" href="arcade.css?v=20260923-1" />
+    <script type="module" src="arcade.mjs?v=20260923-2"></script>
   </head>
   <body>
     <main class="arcade-shell">
       <header class="cabinet-header">
         <div>
-          <p class="eyebrow">ARCADE INTERRUPT // RANDOMIZED</p>
-          <h1 id="game-title">VECTOR BREAK</h1>
+          <p class="eyebrow">ARCADE INTERRUPT // SELECT PROGRAM</p>
+          <h1 id="game-title">SELECT GAME</h1>
         </div>
         <div class="hud" aria-live="polite">
           <span>SCORE <strong id="score">000000</strong></span>
@@ -30,13 +30,35 @@
           Your browser does not support the canvas element.
         </canvas>
         <div class="screen-glass" aria-hidden="true"></div>
+        <nav id="game-menu" class="game-menu" aria-label="Choose a game">
+          <p class="menu-prompt">SELECT PROGRAM</p>
+          <div class="game-list">
+            <button type="button" data-game-id="vector-break">
+              <strong>VECTOR BREAK</strong>
+              <span>Breach six shifting defenses</span>
+            </button>
+            <button type="button" data-game-id="vector-snake">
+              <strong>VECTOR SNAKE</strong>
+              <span>Grow without crossing your trail</span>
+            </button>
+            <button type="button" data-game-id="vector-invaders">
+              <strong>VECTOR INVADERS</strong>
+              <span>Defend the last sector</span>
+            </button>
+            <button type="button" data-game-id="vector-asteroids">
+              <strong>VECTOR ASTEROIDS</strong>
+              <span>Survive the debris field</span>
+            </button>
+          </div>
+          <p class="menu-help">↑ ↓ / W S TO CHOOSE &nbsp; ENTER / SPACE TO PLAY</p>
+        </nav>
       </section>
 
       <div class="cabinet-controls">
-        <p id="instructions">MOVE: ← → / A D &nbsp; START: ENTER OR SPACE</p>
+        <p id="instructions">SELECT: ↑ ↓ / W S &nbsp; PLAY: ENTER OR SPACE</p>
         <div class="button-row">
-          <button id="new-game" type="button">NEW RANDOM GAME</button>
-          <a href="/">ESC / RETURN HOME</a>
+          <button id="game-menu-button" type="button">GAME MENU</button>
+          <a href="/">RETURN HOME</a>
         </div>
       </div>
 

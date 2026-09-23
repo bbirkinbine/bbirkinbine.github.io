@@ -1,4 +1,13 @@
-import { chooseGame, circleRectHit, nextSnakeHead, rectsOverlap, starfieldSpeed, wrapPoint } from './game-core.mjs?v=20260919-2';
+import {
+  VECTOR_BREAK_LEVELS,
+  circleRectBounceAxis,
+  circleRectHit,
+  createVectorBreakBricks,
+  isVectorBreakLevelClear,
+  nextSnakeHead,
+  rectsOverlap,
+  wrapPoint,
+} from './game-core.mjs?v=20260923-2';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -6,7 +15,10 @@ const titleEl = document.querySelector('#game-title');
 const scoreEl = document.querySelector('#score');
 const livesEl = document.querySelector('#lives');
 const instructionsEl = document.querySelector('#instructions');
-const newGameButton = document.querySelector('#new-game');
+const hudEl = document.querySelector('.hud');
+const gameMenu = document.querySelector('#game-menu');
+const gameMenuButton = document.querySelector('#game-menu-button');
+const gameButtons = [...document.querySelectorAll('[data-game-id]')];
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -72,55 +84,45 @@ function overlay(title, subtitle) {
   ctx.restore();
 }
 
-function lineShip(x, y, scale = 1) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  ctx.strokeStyle = COLORS.bright;
-  ctx.lineWidth = 2;
-  ctx.shadowColor = COLORS.phosphor;
-  ctx.shadowBlur = 8;
-  ctx.beginPath();
-  ctx.moveTo(0, -14);
-  ctx.lineTo(11, 12);
-  ctx.lineTo(0, 7);
-  ctx.lineTo(-11, 12);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-5, 11);
-  ctx.lineTo(0, 19 + Math.random() * 5);
-  ctx.lineTo(5, 11);
-  ctx.strokeStyle = COLORS.dim;
-  ctx.stroke();
-  ctx.restore();
-}
-
 class VectorBreak {
   constructor() {
     this.title = 'VECTOR BREAK';
-    this.instructions = 'MOVE: ← → / A D   START: ENTER OR SPACE   R: RANDOM GAME';
+    this.instructions = 'MOVE: ← → / A D   START: ENTER OR SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 3;
     this.state = 'ready';
+    this.levelIndex = 0;
     this.paddle = { x: 330, y: 438, w: 140, h: 10 };
-    this.ball = { x: 400, y: 408, r: 6, vx: 190, vy: -225 };
     this.trail = [];
-    this.bricks = [];
-    for (let row = 0; row < 4; row += 1) {
-      for (let column = 0; column < 8; column += 1) {
-        this.bricks.push({ x: 44 + column * 90, y: 62 + row * 38, w: 72, h: 20, alive: true });
-      }
-    }
+    this.loadLevel();
   }
 
   start() {
-    if (this.state === 'over' || this.state === 'won') Object.assign(this, new VectorBreak());
+    if (this.state === 'over' || this.state === 'won') {
+      Object.assign(this, new VectorBreak());
+    } else if (this.state === 'level-cleared') {
+      this.levelIndex += 1;
+      this.loadLevel();
+    }
     this.state = 'playing';
   }
 
+  loadLevel() {
+    this.currentLevel = VECTOR_BREAK_LEVELS[this.levelIndex];
+    this.bricks = createVectorBreakBricks(this.currentLevel);
+    this.paddle.x = 330;
+    this.resetBall();
+  }
+
   resetBall() {
-    this.ball = { x: this.paddle.x + this.paddle.w / 2, y: 408, r: 6, vx: 190 * (Math.random() > 0.5 ? 1 : -1), vy: -225 };
+    const speedMultiplier = 1 + this.levelIndex * 0.07;
+    this.ball = {
+      x: this.paddle.x + this.paddle.w / 2,
+      y: 408,
+      r: 6,
+      vx: 190 * speedMultiplier * (Math.random() > 0.5 ? 1 : -1),
+      vy: -225 * speedMultiplier,
+    };
     this.trail = [];
     this.state = 'ready';
   }
@@ -136,6 +138,7 @@ class VectorBreak {
 
     this.trail.push({ x: this.ball.x, y: this.ball.y });
     if (this.trail.length > 8) this.trail.shift();
+    const previousBallPosition = { x: this.ball.x, y: this.ball.y };
     this.ball.x += this.ball.vx * dt;
     this.ball.y += this.ball.vy * dt;
 
@@ -157,14 +160,25 @@ class VectorBreak {
 
     for (const brick of this.bricks) {
       if (brick.alive && circleRectHit(this.ball, brick)) {
-        brick.alive = false;
-        this.score += 125;
-        this.ball.vy *= -1;
+        if (!brick.indestructible) {
+          brick.hits -= 1;
+          brick.alive = brick.hits > 0;
+          this.score += brick.maxHits > 1 ? 175 : 125;
+        }
+        const bounceAxis = circleRectBounceAxis(this.ball, brick, previousBallPosition);
+        this.ball[bounceAxis === 'x' ? 'vx' : 'vy'] *= -1;
+        const speed = Math.hypot(this.ball.vx, this.ball.vy);
+        const nextSpeed = Math.min(430, speed * 1.006);
+        this.ball.vx = (this.ball.vx / speed) * nextSpeed;
+        this.ball.vy = (this.ball.vy / speed) * nextSpeed;
         break;
       }
     }
 
-    if (this.bricks.every((brick) => !brick.alive)) this.state = 'won';
+    if (isVectorBreakLevelClear(this.bricks)) {
+      this.state = this.levelIndex === VECTOR_BREAK_LEVELS.length - 1 ? 'won' : 'level-cleared';
+      return;
+    }
     if (this.ball.y - this.ball.r > HEIGHT) {
       this.lives -= 1;
       if (this.lives <= 0) this.state = 'over';
@@ -180,15 +194,27 @@ class VectorBreak {
 
     for (const brick of this.bricks) {
       if (!brick.alive) continue;
-      ctx.strokeStyle = COLORS.phosphor;
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = brick.indestructible
+        ? COLORS.bright
+        : brick.hits < brick.maxHits ? COLORS.dim : COLORS.phosphor;
+      ctx.lineWidth = brick.indestructible ? 2.5 : 1.5;
       ctx.shadowColor = COLORS.phosphor;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = brick.indestructible ? 10 : 6;
       ctx.strokeRect(brick.x, brick.y, brick.w, brick.h);
       ctx.beginPath();
-      ctx.moveTo(brick.x + 8, brick.y + brick.h / 2);
-      ctx.lineTo(brick.x + brick.w - 8, brick.y + brick.h / 2);
-      ctx.strokeStyle = COLORS.faint;
+      if (brick.indestructible) {
+        ctx.moveTo(brick.x + 7, brick.y + 5);
+        ctx.lineTo(brick.x + brick.w - 7, brick.y + brick.h - 5);
+        ctx.moveTo(brick.x + brick.w - 7, brick.y + 5);
+        ctx.lineTo(brick.x + 7, brick.y + brick.h - 5);
+      } else if (brick.maxHits > 1) {
+        ctx.moveTo(brick.x + brick.w / 2, brick.y + 4);
+        ctx.lineTo(brick.x + brick.w / 2, brick.y + brick.h - 4);
+      } else {
+        ctx.moveTo(brick.x + 8, brick.y + brick.h / 2);
+        ctx.lineTo(brick.x + brick.w - 8, brick.y + brick.h / 2);
+      }
+      ctx.strokeStyle = brick.indestructible ? COLORS.dim : COLORS.faint;
       ctx.stroke();
     }
     ctx.shadowBlur = 0;
@@ -210,111 +236,25 @@ class VectorBreak {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    if (this.state === 'ready') overlay('VECTOR BREAK', 'ENTER / SPACE TO SERVE');
+    vectorText(
+      `LEVEL ${String(this.levelIndex + 1).padStart(2, '0')} / ${String(VECTOR_BREAK_LEVELS.length).padStart(2, '0')}  ${this.currentLevel.name}`,
+      22,
+      28,
+      18,
+      'left',
+      COLORS.dim,
+    );
+    if (this.state === 'ready') overlay(`LEVEL ${String(this.levelIndex + 1).padStart(2, '0')}`, `${this.currentLevel.name} // ENTER / SPACE TO SERVE`);
+    if (this.state === 'level-cleared') overlay('LEVEL CLEARED', `ENTER / SPACE FOR LEVEL ${String(this.levelIndex + 2).padStart(2, '0')}`);
     if (this.state === 'over') overlay('SIGNAL LOST', 'ENTER / SPACE TO REBOOT');
-    if (this.state === 'won') overlay('SECTOR CLEARED', 'ENTER / SPACE FOR ANOTHER RUN');
-  }
-}
-
-class StarDodge {
-  constructor() {
-    this.title = 'STAR DODGE';
-    this.instructions = 'PILOT: ARROWS / WASD   START: ENTER OR SPACE   SURVIVE 45 SECONDS';
-    this.score = 0;
-    this.lives = 3;
-    this.state = 'ready';
-    this.ship = { x: 400, y: 410, r: 12 };
-    this.rocks = [];
-    this.stars = Array.from({ length: 70 }, () => ({ x: Math.random() * WIDTH, y: Math.random() * HEIGHT, speed: 16 + Math.random() * 44 }));
-    this.spawnTimer = 0;
-    this.elapsed = 0;
-    this.invulnerable = 0;
-  }
-
-  start() {
-    if (this.state === 'over' || this.state === 'won') Object.assign(this, new StarDodge());
-    this.state = 'playing';
-  }
-
-  update(dt) {
-    for (const star of this.stars) {
-      star.y += starfieldSpeed(star.speed, this.elapsed) * dt;
-      if (star.y > HEIGHT) {
-        star.y = 0;
-        star.x = Math.random() * WIDTH;
-      }
-    }
-    if (this.state !== 'playing') return;
-
-    const dx = (keys.has('ArrowRight') || keys.has('KeyD') ? 1 : 0) - (keys.has('ArrowLeft') || keys.has('KeyA') ? 1 : 0);
-    const dy = (keys.has('ArrowDown') || keys.has('KeyS') ? 1 : 0) - (keys.has('ArrowUp') || keys.has('KeyW') ? 1 : 0);
-    this.ship.x = Math.max(24, Math.min(WIDTH - 24, this.ship.x + dx * 280 * dt));
-    this.ship.y = Math.max(40, Math.min(HEIGHT - 30, this.ship.y + dy * 280 * dt));
-
-    this.elapsed += dt;
-    this.score = this.elapsed * 100;
-    this.invulnerable = Math.max(0, this.invulnerable - dt);
-    this.spawnTimer -= dt;
-    if (this.spawnTimer <= 0) {
-      const radius = 9 + Math.random() * 18;
-      this.rocks.push({ x: 30 + Math.random() * (WIDTH - 60), y: -30, r: radius, speed: 115 + Math.random() * 145, spin: Math.random() * Math.PI, turn: (Math.random() - 0.5) * 2 });
-      this.spawnTimer = Math.max(0.16, 0.55 - this.elapsed * 0.006);
-    }
-
-    for (const rock of this.rocks) {
-      rock.y += rock.speed * dt;
-      rock.spin += rock.turn * dt;
-      const distance = Math.hypot(rock.x - this.ship.x, rock.y - this.ship.y);
-      if (this.invulnerable <= 0 && distance < rock.r + this.ship.r) {
-        this.lives -= 1;
-        this.invulnerable = 1.5;
-        rock.y = HEIGHT + 100;
-        if (this.lives <= 0) this.state = 'over';
-      }
-    }
-    this.rocks = this.rocks.filter((rock) => rock.y < HEIGHT + 60);
-    if (this.elapsed >= 45) this.state = 'won';
-  }
-
-  drawRock(rock) {
-    ctx.save();
-    ctx.translate(rock.x, rock.y);
-    ctx.rotate(rock.spin);
-    ctx.strokeStyle = COLORS.phosphor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    for (let index = 0; index < 8; index += 1) {
-      const angle = (index / 8) * Math.PI * 2;
-      const radius = rock.r * (index % 2 ? 0.72 : 1);
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      if (index === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  draw() {
-    clearScreen();
-    for (const star of this.stars) {
-      ctx.fillStyle = star.speed > 40 ? COLORS.phosphor : COLORS.dim;
-      ctx.fillRect(star.x, star.y, 1, star.speed > 40 ? 4 : 2);
-    }
-    this.rocks.forEach((rock) => this.drawRock(rock));
-    if (this.invulnerable <= 0 || Math.floor(this.invulnerable * 10) % 2 === 0) lineShip(this.ship.x, this.ship.y);
-    vectorText(`TIME ${Math.max(0, 45 - this.elapsed).toFixed(1)}`, 22, 28, 18, 'left', COLORS.dim);
-    if (this.state === 'ready') overlay('STAR DODGE', 'ENTER / SPACE TO LAUNCH');
-    if (this.state === 'over') overlay('SHIP DESTROYED', 'ENTER / SPACE TO REBUILD');
-    if (this.state === 'won') overlay('JUMP POINT REACHED', 'ENTER / SPACE FOR ANOTHER RUN');
+    if (this.state === 'won') overlay('ALL SECTORS CLEARED', 'ENTER / SPACE FOR ANOTHER RUN');
   }
 }
 
 class VectorSnake {
   constructor() {
     this.title = 'VECTOR SNAKE';
-    this.instructions = 'STEER: ARROWS / WASD   START: ENTER OR SPACE   R: RANDOM GAME';
+    this.instructions = 'STEER: ARROWS / WASD   START: ENTER OR SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 1;
     this.state = 'ready';
@@ -406,7 +346,7 @@ class VectorSnake {
 class VectorAsteroids {
   constructor() {
     this.title = 'VECTOR ASTEROIDS';
-    this.instructions = 'TURN: ← → / A D   THRUST: ↑ / W   FIRE: ENTER OR SPACE';
+    this.instructions = 'TURN: ← → / A D   THRUST: ↑ / W   FIRE: ENTER / SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 3;
     this.state = 'ready';
@@ -648,7 +588,7 @@ class VectorAsteroids {
 class VectorInvaders {
   constructor() {
     this.title = 'VECTOR INVADERS';
-    this.instructions = 'MOVE: ← → / A D   FIRE: ENTER OR SPACE   R: RANDOM GAME';
+    this.instructions = 'MOVE: ← → / A D   FIRE: ENTER / SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 3;
     this.state = 'ready';
@@ -840,21 +780,53 @@ class VectorInvaders {
   }
 }
 
-function createGame(id = chooseGame()) {
+function createGame(id) {
   if (id === 'vector-break') return new VectorBreak();
-  if (id === 'star-dodge') return new StarDodge();
   if (id === 'vector-invaders') return new VectorInvaders();
   if (id === 'vector-asteroids') return new VectorAsteroids();
-  return new VectorSnake();
+  if (id === 'vector-snake') return new VectorSnake();
+  return null;
 }
 
-function loadRandomGame() {
-  currentGame = createGame();
+function drawMenuBackdrop() {
+  clearScreen();
+  ctx.strokeStyle = COLORS.faint;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(12, 12, WIDTH - 24, HEIGHT - 24);
+}
+
+function showMenu() {
+  keys.clear();
+  currentGame = null;
+  document.body.classList.add('menu-open');
+  gameMenu.hidden = false;
+  gameMenuButton.hidden = true;
+  hudEl.hidden = true;
+  titleEl.textContent = 'SELECT GAME';
+  instructionsEl.textContent = 'SELECT: ↑ ↓ / W S   PLAY: ENTER OR SPACE';
+  drawMenuBackdrop();
+  const selectedButton = gameButtons.find((button) => button.getAttribute('aria-current') === 'true');
+  (selectedButton || gameButtons[0]).focus({ preventScroll: true });
+}
+
+function loadGame(id) {
+  const nextGame = createGame(id);
+  if (!nextGame) return;
+  currentGame = nextGame;
+  document.body.classList.remove('menu-open');
+  gameButtons.forEach((button) => {
+    if (button.dataset.gameId === id) button.setAttribute('aria-current', 'true');
+    else button.removeAttribute('aria-current');
+  });
+  gameMenu.hidden = true;
+  gameMenuButton.hidden = false;
+  hudEl.hidden = false;
   setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions);
   canvas.focus({ preventScroll: true });
 }
 
 function action() {
+  if (!currentGame) return;
   if (typeof currentGame.action === 'function') currentGame.action();
   else currentGame.start();
 }
@@ -862,29 +834,46 @@ function action() {
 function frame(now) {
   const dt = Math.min(0.033, (now - lastTime) / 1000);
   lastTime = now;
-  currentGame.update(dt);
-  currentGame.draw();
-  setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions);
+  if (currentGame) {
+    currentGame.update(dt);
+    currentGame.draw();
+    setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions);
+  }
   requestAnimationFrame(frame);
+}
+
+function moveMenuFocus(direction) {
+  const activeIndex = gameButtons.indexOf(document.activeElement);
+  const currentIndex = activeIndex >= 0 ? activeIndex : 0;
+  const nextIndex = (currentIndex + direction + gameButtons.length) % gameButtons.length;
+  gameButtons[nextIndex].focus({ preventScroll: true });
 }
 
 window.addEventListener('keydown', (event) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(event.code)) event.preventDefault();
-  if (event.code === 'Escape') {
-    window.location.assign('/');
+  if (event.code === 'Escape' || event.code === 'KeyM') {
+    showMenu();
     return;
   }
-  if (event.code === 'KeyR') {
-    loadRandomGame();
+
+  if (!gameMenu.hidden) {
+    if (event.code === 'ArrowUp' || event.code === 'KeyW') moveMenuFocus(-1);
+    if (event.code === 'ArrowDown' || event.code === 'KeyS') moveMenuFocus(1);
+    if ((event.code === 'Enter' || event.code === 'Space') && gameButtons.includes(document.activeElement)) {
+      event.preventDefault();
+      loadGame(document.activeElement.dataset.gameId);
+    }
     return;
   }
+
   if (event.code === 'Enter' || event.code === 'Space') action();
   keys.add(event.code);
 });
 
 window.addEventListener('keyup', (event) => keys.delete(event.code));
 window.addEventListener('blur', () => keys.clear());
-newGameButton.addEventListener('click', loadRandomGame);
+gameMenuButton.addEventListener('click', showMenu);
+gameButtons.forEach((button) => button.addEventListener('click', () => loadGame(button.dataset.gameId)));
 
 for (const button of document.querySelectorAll('[data-control]')) {
   const mapping = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
@@ -908,5 +897,5 @@ for (const button of document.querySelectorAll('[data-control]')) {
   button.addEventListener('pointerleave', up);
 }
 
-loadRandomGame();
+showMenu();
 requestAnimationFrame(frame);
