@@ -8,6 +8,7 @@ const runThemeScript = (themeScript, { savedStyle = null } = {}) => {
   const toggleListeners = {};
   const attributes = {};
   const writes = [];
+  const toggleState = { blurCount: 0 };
   const root = { dataset: {} };
   const toggle = {
     addEventListener(type, listener) {
@@ -15,6 +16,9 @@ const runThemeScript = (themeScript, { savedStyle = null } = {}) => {
     },
     setAttribute(name, value) {
       attributes[name] = value;
+    },
+    blur() {
+      toggleState.blurCount += 1;
     },
   };
 
@@ -39,7 +43,7 @@ const runThemeScript = (themeScript, { savedStyle = null } = {}) => {
   };
 
   runInNewContext(themeScript, context);
-  return { attributes, documentListeners, root, toggleListeners, writes };
+  return { attributes, documentListeners, root, toggleListeners, toggleState, writes };
 };
 
 test('the homepage exposes an accessible responsive halftone portrait', async () => {
@@ -98,7 +102,7 @@ test('Vector Field is the default until the visitor uses the selector', async ()
   assert.deepEqual(firstVisit.writes, []);
 
   firstVisit.documentListeners.DOMContentLoaded();
-  firstVisit.toggleListeners.click();
+  firstVisit.toggleListeners.click({ detail: 1 });
 
   assert.equal(firstVisit.root.dataset.style, 'red-grid');
   assert.deepEqual(firstVisit.writes, [['bb-style', 'red-grid']]);
@@ -113,4 +117,19 @@ test('Vector Field is the default until the visitor uses the selector', async ()
 
   assert.equal(laterVisit.root.dataset.style, 'red-grid');
   assert.deepEqual(laterVisit.writes, []);
+});
+
+test('pointer style selection releases focus for the global Enter shortcut', async () => {
+  const themeScript = await readFile(new URL('../theme.js', import.meta.url), 'utf8');
+  const pointerVisit = runThemeScript(themeScript);
+  pointerVisit.documentListeners.DOMContentLoaded();
+  pointerVisit.toggleListeners.click({ detail: 1 });
+
+  assert.equal(pointerVisit.toggleState.blurCount, 1);
+
+  const keyboardVisit = runThemeScript(themeScript);
+  keyboardVisit.documentListeners.DOMContentLoaded();
+  keyboardVisit.toggleListeners.click({ detail: 0 });
+
+  assert.equal(keyboardVisit.toggleState.blurCount, 0);
 });

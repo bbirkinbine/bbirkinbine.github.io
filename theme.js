@@ -43,7 +43,7 @@
     };
 
     toggles.forEach((toggle) => {
-      toggle.addEventListener("click", () => {
+      toggle.addEventListener("click", (event) => {
         const next = styles[(currentIndex() + 1) % styles.length];
         root.dataset.style = next.id;
 
@@ -54,6 +54,8 @@
         }
 
         updateLabels();
+
+        if (event.detail > 0) toggle.blur();
       });
     });
 
