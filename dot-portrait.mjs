@@ -126,7 +126,7 @@ const canvas = document.querySelector("[data-dot-portrait]");
 if (canvas) {
   const context = canvas.getContext("2d");
   const root = document.documentElement;
-  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+  const printMode = window.matchMedia("print");
   let animationFrame;
 
   const render = () => {
@@ -137,7 +137,6 @@ if (canvas) {
     const height = pitch * portraitRowCount;
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     const rootStyles = getComputedStyle(root);
-    const isDark = rootStyles.colorScheme.includes("dark");
 
     canvas.width = Math.round(width * pixelRatio);
     canvas.height = Math.round(height * pixelRatio);
@@ -151,7 +150,7 @@ if (canvas) {
         if (level === 0) return;
 
         const normalized = (level - 1) / 14;
-        const strength = isDark ? normalized ** 0.95 : (1 - normalized) ** 0.9;
+        const strength = normalized ** 0.95;
         const radius = pitch * (0.08 + 0.38 * strength);
         const centerX = (x + 0.5) * pitch;
         const centerY = (y + 0.5) * pitch;
@@ -172,9 +171,8 @@ if (canvas) {
   new ResizeObserver(scheduleRender).observe(canvas);
   new MutationObserver(scheduleRender).observe(root, {
     attributes: true,
-    attributeFilter: ["data-theme"],
+    attributeFilter: ["data-style"],
   });
-  systemTheme.addEventListener("change", scheduleRender);
+  printMode.addEventListener("change", scheduleRender);
   scheduleRender();
 }
-

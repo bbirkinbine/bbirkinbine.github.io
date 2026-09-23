@@ -1,6 +1,6 @@
 # Brian Birkinbine
 
-A minimal personal profile site with a VT100-inspired terminal aesthetic.
+A personal profile site with four dark, retro-computing visual styles.
 
 ## Live site
 
@@ -10,19 +10,20 @@ A minimal personal profile site with a VT100-inspired terminal aesthetic.
 
 - Links to GitHub, LinkedIn, Instagram, Bluesky, X, Keybase, and email
 - Plain-language privacy policy and terms of use
-- System-aware light and dark themes with a persistent manual toggle
-- Green-phosphor terminal styling, subtle scanlines, and responsive layout
+- Terminal, Arcade Night, Vector Field, and Red Grid City styles with distinct palettes, backgrounds, and layouts
+- Vector Field as the first-visit default, with the visitor's style-selector choice persisted locally
 - Responsive 96×105 halftone dot portrait derived from Brian's headshot without publishing the source photo
-- Accessible labels and reduced-motion support
+- Accessible labels, reduced-motion and forced-color support, and a light print layout
 - Hidden monochrome vector arcade with a five-game selector at `/games/`, opened by pressing Enter on the homepage
+- Intentional phosphor glow retained inside the vector arcade
 - Vector Lander with six fuel-balanced mountain and crater terrains, dynamic approach zoom, and an `F` hotkey for unlimited-fuel casual mode
 - No tracking, build system, or runtime dependencies
 
 ## Project files
 
 - `index.html` — page structure, metadata, and social-profile links
-- `styles.css` — responsive VT100-inspired presentation
-- `theme.js` — system-theme detection and manual theme selection
+- `styles.css` — responsive layouts and artwork for all four visual styles
+- `theme.js` — Vector Field default, accessible style cycling, and preference persistence
 - `CNAME` — custom domain served by GitHub Pages
 - `.nojekyll` — direct static-file publishing through GitHub Pages
 
