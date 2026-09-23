@@ -49,13 +49,31 @@ test('Vector Lander missions contain ordered terrain and reachable landing pads'
   assert.equal(new Set(VECTOR_LANDER_MISSIONS.map((mission) => mission.name)).size, 6);
   assert.ok(new Set(VECTOR_LANDER_MISSIONS.map((mission) => mission.terrain.at(-1).x)).size >= 4);
   VECTOR_LANDER_MISSIONS.forEach((mission) => {
+    const elevations = mission.terrain.map((point) => point.y);
+    const padCenter = mission.pad.x + mission.pad.w / 2;
+    const routeLeft = Math.min(mission.start.x, padCenter);
+    const routeRight = Math.max(mission.start.x, padCenter);
+    const routePeakY = Math.min(
+      ...mission.terrain
+        .filter((point) => point.x >= routeLeft && point.x <= routeRight)
+        .map((point) => point.y),
+    );
+    const steepSegments = mission.terrain.slice(1).filter((point, index) => {
+      const previous = mission.terrain[index];
+      const isPad = previous.x === mission.pad.x && point.x === mission.pad.x + mission.pad.w;
+      return !isPad && Math.abs((point.y - previous.y) / (point.x - previous.x)) >= 1;
+    });
+
     assert.ok(mission.name);
     assert.ok(mission.gravity > 0);
     assert.ok(mission.fuel >= estimateLanderFuelUse(mission) * 1.5);
     assert.ok(mission.terrain.at(-1).x > 800);
     assert.ok(mission.start.x > 0 && mission.start.x < mission.terrain.at(-1).x);
     assert.ok(mission.pad.x > 0 && mission.pad.x + mission.pad.w < mission.terrain.at(-1).x);
-    assert.ok(mission.terrain.length >= 2);
+    assert.ok(mission.terrain.length >= 18);
+    assert.ok(Math.max(...elevations) - Math.min(...elevations) >= 180);
+    assert.ok(mission.pad.y - routePeakY >= 140);
+    assert.ok(steepSegments.length >= 6);
     for (let index = 1; index < mission.terrain.length; index += 1) {
       assert.ok(mission.terrain[index].x > mission.terrain[index - 1].x);
     }
@@ -173,7 +191,7 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260923-8/);
+  assert.match(homepage, /easter-egg\.mjs\?v=20260923-10/);
 });
 
 test('the arcade build uses one version across its page and launchers', async () => {
@@ -212,4 +230,11 @@ test('Vector Lander exposes an unlimited fuel hotkey and status display', async 
   assert.match(arcade, /event\.code === 'KeyF'/);
   assert.match(arcade, /F: FUEL \$\{fuelMode\}/);
   assert.match(arcade, /FUEL INF/);
+});
+
+test('mouse hover transfers the game menu keyboard focus', async () => {
+  const arcade = await readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8');
+  assert.match(arcade, /button\.addEventListener\('pointerenter'/);
+  assert.match(arcade, /event\.pointerType === 'mouse'/);
+  assert.match(arcade, /button\.focus\(\{ preventScroll: true \}\)/);
 });

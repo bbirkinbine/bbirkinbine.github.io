@@ -14,7 +14,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260923-8';
+} from './game-core.mjs?v=20260923-10';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -1120,7 +1120,12 @@ window.addEventListener('keydown', (event) => {
 window.addEventListener('keyup', (event) => keys.delete(event.code));
 window.addEventListener('blur', () => keys.clear());
 gameMenuButton.addEventListener('click', showMenu);
-gameButtons.forEach((button) => button.addEventListener('click', () => loadGame(button.dataset.gameId)));
+gameButtons.forEach((button) => {
+  button.addEventListener('pointerenter', (event) => {
+    if (event.pointerType === 'mouse' && !gameMenu.hidden) button.focus({ preventScroll: true });
+  });
+  button.addEventListener('click', () => loadGame(button.dataset.gameId));
+});
 
 for (const button of document.querySelectorAll('[data-control]')) {
   const mapping = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };

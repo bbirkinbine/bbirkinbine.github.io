@@ -71,89 +71,104 @@ export const VECTOR_LANDER_MISSIONS = [
   {
     name: 'TRANQUILITY',
     gravity: 32,
-    fuel: 100,
+    fuel: 110,
     start: { x: 300, y: 60, vx: 42 },
-    pad: { x: 500, y: 382, w: 140 },
+    pad: { x: 500, y: 390, w: 140 },
     terrain: [
-      { x: 0, y: 370 }, { x: 90, y: 415 }, { x: 170, y: 345 },
-      { x: 260, y: 400 }, { x: 360, y: 330 }, { x: 450, y: 410 },
-      { x: 500, y: 382 }, { x: 640, y: 382 }, { x: 710, y: 420 },
-      { x: 820, y: 350 }, { x: 930, y: 410 }, { x: 1030, y: 355 },
-      { x: 1100, y: 390 },
+      { x: 0, y: 400 }, { x: 70, y: 430 }, { x: 150, y: 370 },
+      { x: 220, y: 420 }, { x: 300, y: 350 }, { x: 350, y: 300 },
+      { x: 400, y: 245 }, { x: 445, y: 320 }, { x: 480, y: 410 },
+      { x: 500, y: 390 }, { x: 640, y: 390 }, { x: 690, y: 425 },
+      { x: 760, y: 360 }, { x: 820, y: 410 }, { x: 900, y: 290 },
+      { x: 960, y: 360 }, { x: 1040, y: 435 }, { x: 1100, y: 395 },
     ],
   },
   {
     name: 'CRATER RUN',
     gravity: 35,
-    fuel: 115,
+    fuel: 160,
     start: { x: 1050, y: 58, vx: -95 },
     pad: { x: 150, y: 405, w: 110 },
     terrain: [
-      { x: 0, y: 350 }, { x: 80, y: 430 }, { x: 130, y: 420 },
-      { x: 150, y: 405 }, { x: 260, y: 405 }, { x: 310, y: 350 },
-      { x: 410, y: 430 }, { x: 520, y: 360 }, { x: 640, y: 425 },
-      { x: 760, y: 335 }, { x: 880, y: 415 }, { x: 990, y: 350 },
-      { x: 1100, y: 430 }, { x: 1200, y: 365 }, { x: 1280, y: 390 },
+      { x: 0, y: 375 }, { x: 60, y: 430 }, { x: 110, y: 410 },
+      { x: 150, y: 405 }, { x: 260, y: 405 }, { x: 300, y: 350 },
+      { x: 350, y: 420 }, { x: 430, y: 380 }, { x: 500, y: 435 },
+      { x: 560, y: 340 }, { x: 610, y: 250 }, { x: 660, y: 185 },
+      { x: 700, y: 160 }, { x: 740, y: 195 }, { x: 800, y: 300 },
+      { x: 860, y: 420 }, { x: 930, y: 360 }, { x: 990, y: 410 },
+      { x: 1050, y: 350 }, { x: 1110, y: 425 }, { x: 1190, y: 330 },
+      { x: 1280, y: 390 },
     ],
   },
   {
     name: 'NARROW VECTOR',
     gravity: 38,
-    fuel: 125,
+    fuel: 175,
     start: { x: 300, y: 62, vx: 140 },
     pad: { x: 1160, y: 360, w: 85 },
     terrain: [
-      { x: 0, y: 400 }, { x: 100, y: 340 }, { x: 210, y: 430 },
-      { x: 330, y: 360 }, { x: 440, y: 420 }, { x: 560, y: 330 },
-      { x: 690, y: 435 }, { x: 810, y: 350 }, { x: 930, y: 425 },
-      { x: 1060, y: 340 }, { x: 1120, y: 390 }, { x: 1160, y: 360 },
-      { x: 1245, y: 360 }, { x: 1300, y: 415 }, { x: 1380, y: 350 },
-      { x: 1440, y: 390 },
+      { x: 0, y: 410 }, { x: 90, y: 350 }, { x: 180, y: 435 },
+      { x: 270, y: 380 }, { x: 340, y: 420 }, { x: 420, y: 330 },
+      { x: 500, y: 400 }, { x: 570, y: 260 }, { x: 630, y: 185 },
+      { x: 690, y: 230 }, { x: 750, y: 420 }, { x: 820, y: 350 },
+      { x: 880, y: 240 }, { x: 930, y: 155 }, { x: 980, y: 210 },
+      { x: 1040, y: 340 }, { x: 1100, y: 425 }, { x: 1160, y: 360 },
+      { x: 1245, y: 360 }, { x: 1300, y: 430 }, { x: 1380, y: 340 },
+      { x: 1440, y: 395 },
     ],
   },
   {
     name: 'TWIN PEAKS',
     gravity: 34,
-    fuel: 110,
+    fuel: 170,
     start: { x: 690, y: 55, vx: -30 },
     pad: { x: 240, y: 410, w: 110 },
     terrain: [
-      { x: 0, y: 430 }, { x: 100, y: 350 }, { x: 190, y: 430 },
-      { x: 220, y: 420 }, { x: 240, y: 410 }, { x: 350, y: 410 },
-      { x: 420, y: 340 }, { x: 520, y: 270 }, { x: 620, y: 390 },
-      { x: 690, y: 320 }, { x: 760, y: 390 }, { x: 860, y: 260 },
-      { x: 950, y: 350 }, { x: 1060, y: 430 }, { x: 1180, y: 340 },
-      { x: 1280, y: 410 }, { x: 1380, y: 370 },
+      { x: 0, y: 430 }, { x: 90, y: 360 }, { x: 170, y: 420 },
+      { x: 220, y: 390 }, { x: 240, y: 410 }, { x: 350, y: 410 },
+      { x: 390, y: 330 }, { x: 430, y: 250 }, { x: 480, y: 180 },
+      { x: 520, y: 145 }, { x: 560, y: 190 }, { x: 610, y: 300 },
+      { x: 660, y: 400 }, { x: 690, y: 350 }, { x: 740, y: 410 },
+      { x: 790, y: 320 }, { x: 830, y: 220 }, { x: 870, y: 155 },
+      { x: 910, y: 190 }, { x: 960, y: 300 }, { x: 1040, y: 430 },
+      { x: 1130, y: 350 }, { x: 1220, y: 420 }, { x: 1300, y: 340 },
+      { x: 1380, y: 390 },
     ],
   },
   {
     name: 'LONG TRAVERSE',
     gravity: 33,
-    fuel: 145,
+    fuel: 210,
     start: { x: 180, y: 52, vx: 165 },
     pad: { x: 1420, y: 405, w: 120 },
     terrain: [
-      { x: 0, y: 390 }, { x: 100, y: 340 }, { x: 200, y: 410 },
-      { x: 320, y: 330 }, { x: 450, y: 430 }, { x: 570, y: 350 },
-      { x: 700, y: 420 }, { x: 840, y: 300 }, { x: 960, y: 380 },
-      { x: 1100, y: 435 }, { x: 1230, y: 340 }, { x: 1350, y: 420 },
-      { x: 1420, y: 405 }, { x: 1540, y: 405 }, { x: 1600, y: 350 },
+      { x: 0, y: 410 }, { x: 80, y: 350 }, { x: 150, y: 420 },
+      { x: 220, y: 390 }, { x: 300, y: 430 }, { x: 380, y: 350 },
+      { x: 460, y: 410 }, { x: 540, y: 320 }, { x: 610, y: 250 },
+      { x: 680, y: 190 }, { x: 740, y: 150 }, { x: 800, y: 135 },
+      { x: 860, y: 175 }, { x: 920, y: 260 }, { x: 990, y: 410 },
+      { x: 1060, y: 435 }, { x: 1140, y: 360 }, { x: 1200, y: 230 },
+      { x: 1260, y: 190 }, { x: 1320, y: 280 }, { x: 1370, y: 420 },
+      { x: 1420, y: 405 }, { x: 1540, y: 405 }, { x: 1600, y: 330 },
       { x: 1680, y: 390 },
     ],
   },
   {
     name: 'BROKEN HORIZON',
     gravity: 40,
-    fuel: 120,
+    fuel: 165,
     start: { x: 1280, y: 55, vx: -130 },
     pad: { x: 650, y: 370, w: 75 },
     terrain: [
-      { x: 0, y: 420 }, { x: 110, y: 350 }, { x: 230, y: 430 },
-      { x: 350, y: 320 }, { x: 470, y: 410 }, { x: 570, y: 345 },
-      { x: 620, y: 395 }, { x: 650, y: 370 }, { x: 725, y: 370 },
-      { x: 770, y: 410 }, { x: 870, y: 300 }, { x: 990, y: 430 },
-      { x: 1110, y: 340 }, { x: 1230, y: 415 }, { x: 1350, y: 325 },
-      { x: 1450, y: 420 }, { x: 1550, y: 380 },
+      { x: 0, y: 420 }, { x: 70, y: 360 }, { x: 150, y: 430 },
+      { x: 230, y: 340 }, { x: 320, y: 440 }, { x: 400, y: 300 },
+      { x: 470, y: 390 }, { x: 540, y: 330 }, { x: 600, y: 420 },
+      { x: 650, y: 370 }, { x: 725, y: 370 }, { x: 760, y: 430 },
+      { x: 820, y: 350 }, { x: 870, y: 410 }, { x: 930, y: 300 },
+      { x: 980, y: 220 }, { x: 1030, y: 160 }, { x: 1080, y: 200 },
+      { x: 1140, y: 340 }, { x: 1200, y: 425 }, { x: 1280, y: 350 },
+      { x: 1340, y: 420 }, { x: 1400, y: 300 }, { x: 1460, y: 435 },
+      { x: 1550, y: 380 },
     ],
   },
 ];
@@ -268,8 +283,19 @@ export function estimateLanderFuelUse(mission, physics = {}) {
   const horizontalDelta = Math.abs(cruiseVelocity - mission.start.vx)
     + Math.max(0, Math.abs(cruiseVelocity) - 30);
   const verticalDelta = Math.max(0, mission.gravity * coastTime - landingSpeed);
+  const routeLeft = Math.min(mission.start.x, padCenter);
+  const routeRight = Math.max(mission.start.x, padCenter);
+  const routePeakY = Math.min(
+    mission.pad.y,
+    ...mission.terrain
+      .filter((point) => point.x >= routeLeft && point.x <= routeRight)
+      .map((point) => point.y),
+  );
+  const obstructingRelief = Math.max(0, mission.pad.y - routePeakY - 80);
+  const mountainDelta = Math.sqrt(2 * mission.gravity * obstructingRelief) * 0.65;
   const effectiveAcceleration = Math.max(1, thrust - mission.gravity / 2);
-  return Math.ceil((Math.hypot(horizontalDelta, verticalDelta) / effectiveAcceleration) * burnRate * 1.2);
+  const requiredDelta = Math.hypot(horizontalDelta, verticalDelta) + mountainDelta;
+  return Math.ceil((requiredDelta / effectiveAcceleration) * burnRate * 1.2);
 }
 
 export function isSafeLanderTouchdown(ship, pad, limits = {}) {
