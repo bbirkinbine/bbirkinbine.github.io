@@ -287,12 +287,26 @@ canvas {
   }
 
   .game-menu {
-    padding: 1rem;
+    padding: 0.5rem;
+  }
+
+  .menu-prompt {
+    margin-bottom: 0.35rem;
+    font-size: 1.3rem;
   }
 
   .game-list button {
-    min-height: 4.25rem;
-    padding: 0.55rem 0.65rem;
+    min-height: 2.65rem;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .game-list span {
+    display: none;
+  }
+
+  .menu-help {
+    margin-top: 0.35rem;
+    font-size: 0.5rem;
   }
 }
 

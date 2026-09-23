@@ -1,13 +1,17 @@
 import {
   VECTOR_BREAK_LEVELS,
+  VECTOR_LANDER_MISSIONS,
   circleRectBounceAxis,
   circleRectHit,
   createVectorBreakBricks,
   isVectorBreakLevelClear,
+  isSafeLanderTouchdown,
+  nextMenuGridIndex,
   nextSnakeHead,
   rectsOverlap,
+  terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260923-2';
+} from './game-core.mjs?v=20260923-4';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -19,6 +23,7 @@ const hudEl = document.querySelector('.hud');
 const gameMenu = document.querySelector('#game-menu');
 const gameMenuButton = document.querySelector('#game-menu-button');
 const gameButtons = [...document.querySelectorAll('[data-game-id]')];
+const touchActionButton = document.querySelector('[data-control="action"]');
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -34,11 +39,12 @@ const keys = new Set();
 let currentGame;
 let lastTime = performance.now();
 
-function setHud(title, score, lives, instructions) {
+function setHud(title, score, lives, instructions, actionLabel = 'ACTION') {
   titleEl.textContent = title;
   scoreEl.textContent = String(Math.max(0, Math.floor(score))).padStart(6, '0');
   livesEl.textContent = String(Math.max(0, lives)).padStart(2, '0');
   instructionsEl.textContent = instructions;
+  touchActionButton.textContent = actionLabel;
 }
 
 function clearScreen() {
@@ -87,6 +93,7 @@ function overlay(title, subtitle) {
 class VectorBreak {
   constructor() {
     this.title = 'VECTOR BREAK';
+    this.actionLabel = 'SERVE';
     this.instructions = 'MOVE: ← → / A D   START: ENTER OR SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 3;
@@ -254,6 +261,7 @@ class VectorBreak {
 class VectorSnake {
   constructor() {
     this.title = 'VECTOR SNAKE';
+    this.actionLabel = 'START';
     this.instructions = 'STEER: ARROWS / WASD   START: ENTER OR SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 1;
@@ -343,9 +351,179 @@ class VectorSnake {
   }
 }
 
+class VectorLander {
+  constructor() {
+    this.title = 'VECTOR LANDER';
+    this.actionLabel = 'START';
+    this.instructions = 'ROTATE: ← → / A D   THRUST: ↑ / W   START: ENTER / SPACE   M / ESC: MENU';
+    this.score = 0;
+    this.lives = 3;
+    this.state = 'ready';
+    this.mission = 1;
+    this.landingBonus = 0;
+    this.loadMission();
+  }
+
+  loadMission() {
+    const missionIndex = (this.mission - 1) % VECTOR_LANDER_MISSIONS.length;
+    const cycle = Math.floor((this.mission - 1) / VECTOR_LANDER_MISSIONS.length);
+    this.currentMission = VECTOR_LANDER_MISSIONS[missionIndex];
+    this.gravity = this.currentMission.gravity + cycle * 3;
+    this.resetShip();
+  }
+
+  resetShip() {
+    const { start } = this.currentMission;
+    this.ship = { x: start.x, y: start.y, vx: start.vx, vy: 0, angle: 0, r: 13 };
+    this.fuel = 100;
+    this.thrusting = false;
+    this.state = 'ready';
+  }
+
+  start() {
+    if (this.state === 'over') {
+      Object.assign(this, new VectorLander());
+    } else if (this.state === 'landed') {
+      this.mission += 1;
+      this.loadMission();
+    } else if (this.state === 'crashed') {
+      this.resetShip();
+    }
+    this.state = 'playing';
+  }
+
+  update(dt) {
+    this.thrusting = false;
+    if (this.state !== 'playing') return;
+
+    const turn = (keys.has('ArrowRight') || keys.has('KeyD') ? 1 : 0)
+      - (keys.has('ArrowLeft') || keys.has('KeyA') ? 1 : 0);
+    this.ship.angle = Math.max(-1.35, Math.min(1.35, this.ship.angle + turn * 2.25 * dt));
+
+    if ((keys.has('ArrowUp') || keys.has('KeyW')) && this.fuel > 0) {
+      const thrust = 105;
+      this.ship.vx += Math.sin(this.ship.angle) * thrust * dt;
+      this.ship.vy -= Math.cos(this.ship.angle) * thrust * dt;
+      this.fuel = Math.max(0, this.fuel - 14 * dt);
+      this.thrusting = true;
+    }
+
+    this.ship.vy += this.gravity * dt;
+    this.ship.x += this.ship.vx * dt;
+    this.ship.y += this.ship.vy * dt;
+
+    if (this.ship.x < 18 || this.ship.x > WIDTH - 18) {
+      this.ship.x = Math.max(18, Math.min(WIDTH - 18, this.ship.x));
+      this.ship.vx *= -0.35;
+    }
+    if (this.ship.y < 24) {
+      this.ship.y = 24;
+      this.ship.vy = Math.max(0, this.ship.vy);
+    }
+
+    const groundY = terrainHeightAtX(this.currentMission.terrain, this.ship.x);
+    if (this.ship.y + this.ship.r < groundY) return;
+
+    const landedSafely = isSafeLanderTouchdown(this.ship, this.currentMission.pad);
+    this.ship.y = groundY - this.ship.r;
+    this.ship.vx = 0;
+    this.ship.vy = 0;
+    this.thrusting = false;
+    if (landedSafely) {
+      this.ship.angle = 0;
+      this.landingBonus = this.mission * 500 + Math.round(this.fuel) * 10;
+      this.score += this.landingBonus;
+      this.state = 'landed';
+      return;
+    }
+
+    this.lives -= 1;
+    this.state = this.lives <= 0 ? 'over' : 'crashed';
+  }
+
+  drawShip() {
+    ctx.save();
+    ctx.translate(this.ship.x, this.ship.y);
+    ctx.rotate(this.ship.angle);
+    ctx.strokeStyle = COLORS.bright;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = COLORS.phosphor;
+    ctx.shadowBlur = 9;
+    ctx.beginPath();
+    ctx.moveTo(0, -15);
+    ctx.lineTo(10, 10);
+    ctx.lineTo(5, 8);
+    ctx.lineTo(-5, 8);
+    ctx.lineTo(-10, 10);
+    ctx.closePath();
+    ctx.moveTo(6, 8);
+    ctx.lineTo(11, 14);
+    ctx.moveTo(-6, 8);
+    ctx.lineTo(-11, 14);
+    ctx.stroke();
+    if (this.thrusting) {
+      ctx.strokeStyle = COLORS.dim;
+      ctx.beginPath();
+      ctx.moveTo(-5, 10);
+      ctx.lineTo(0, 22 + Math.random() * 7);
+      ctx.lineTo(5, 10);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  draw() {
+    clearScreen();
+    const { terrain, pad, name } = this.currentMission;
+    ctx.save();
+    ctx.strokeStyle = COLORS.dim;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = COLORS.phosphor;
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    terrain.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.stroke();
+    ctx.strokeStyle = COLORS.bright;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(pad.x, pad.y);
+    ctx.lineTo(pad.x + pad.w, pad.y);
+    ctx.stroke();
+    ctx.lineWidth = 1.5;
+    for (const x of [pad.x, pad.x + pad.w]) {
+      ctx.beginPath();
+      ctx.moveTo(x, pad.y - 8);
+      ctx.lineTo(x, pad.y + 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    this.drawShip();
+    vectorText(`MISSION ${String(this.mission).padStart(2, '0')}  ${name}`, 22, 24, 18, 'left', COLORS.dim);
+    vectorText(`FUEL ${Math.ceil(this.fuel).toString().padStart(3, '0')}`, WIDTH - 22, 24, 18, 'right', this.fuel < 20 ? COLORS.bright : COLORS.dim);
+    vectorText(
+      `H/S ${Math.abs(this.ship.vx).toFixed(0).padStart(3, '0')}  V/S ${Math.max(0, this.ship.vy).toFixed(0).padStart(3, '0')}  ANG ${Math.round(Math.abs(this.ship.angle) * 180 / Math.PI).toString().padStart(2, '0')}°`,
+      22,
+      48,
+      16,
+      'left',
+      COLORS.dim,
+    );
+    if (this.state === 'ready') overlay('VECTOR LANDER', `${name} // ENTER / SPACE TO DESCEND`);
+    if (this.state === 'crashed') overlay('HULL BREACH', 'ENTER / SPACE TO RETRY');
+    if (this.state === 'landed') overlay('TOUCHDOWN', `BONUS ${this.landingBonus} // ENTER / SPACE FOR NEXT MISSION`);
+    if (this.state === 'over') overlay('MISSION FAILED', 'ENTER / SPACE TO REBOOT');
+  }
+}
+
 class VectorAsteroids {
   constructor() {
     this.title = 'VECTOR ASTEROIDS';
+    this.actionLabel = 'FIRE';
     this.instructions = 'TURN: ← → / A D   THRUST: ↑ / W   FIRE: ENTER / SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 3;
@@ -588,6 +766,7 @@ class VectorAsteroids {
 class VectorInvaders {
   constructor() {
     this.title = 'VECTOR INVADERS';
+    this.actionLabel = 'FIRE';
     this.instructions = 'MOVE: ← → / A D   FIRE: ENTER / SPACE   M / ESC: MENU';
     this.score = 0;
     this.lives = 3;
@@ -785,6 +964,7 @@ function createGame(id) {
   if (id === 'vector-invaders') return new VectorInvaders();
   if (id === 'vector-asteroids') return new VectorAsteroids();
   if (id === 'vector-snake') return new VectorSnake();
+  if (id === 'vector-lander') return new VectorLander();
   return null;
 }
 
@@ -803,7 +983,7 @@ function showMenu() {
   gameMenuButton.hidden = true;
   hudEl.hidden = true;
   titleEl.textContent = 'SELECT GAME';
-  instructionsEl.textContent = 'SELECT: ↑ ↓ / W S   PLAY: ENTER OR SPACE';
+  instructionsEl.textContent = 'SELECT: ARROWS / WASD   PLAY: ENTER OR SPACE';
   drawMenuBackdrop();
   const selectedButton = gameButtons.find((button) => button.getAttribute('aria-current') === 'true');
   (selectedButton || gameButtons[0]).focus({ preventScroll: true });
@@ -821,7 +1001,7 @@ function loadGame(id) {
   gameMenu.hidden = true;
   gameMenuButton.hidden = false;
   hudEl.hidden = false;
-  setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions);
+  setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions, currentGame.actionLabel);
   canvas.focus({ preventScroll: true });
 }
 
@@ -837,7 +1017,7 @@ function frame(now) {
   if (currentGame) {
     currentGame.update(dt);
     currentGame.draw();
-    setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions);
+    setHud(currentGame.title, currentGame.score, currentGame.lives, currentGame.instructions, currentGame.actionLabel);
   }
   requestAnimationFrame(frame);
 }
@@ -845,7 +1025,7 @@ function frame(now) {
 function moveMenuFocus(direction) {
   const activeIndex = gameButtons.indexOf(document.activeElement);
   const currentIndex = activeIndex >= 0 ? activeIndex : 0;
-  const nextIndex = (currentIndex + direction + gameButtons.length) % gameButtons.length;
+  const nextIndex = nextMenuGridIndex(currentIndex, direction, gameButtons.length);
   gameButtons[nextIndex].focus({ preventScroll: true });
 }
 
@@ -857,8 +1037,21 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (!gameMenu.hidden) {
-    if (event.code === 'ArrowUp' || event.code === 'KeyW') moveMenuFocus(-1);
-    if (event.code === 'ArrowDown' || event.code === 'KeyS') moveMenuFocus(1);
+    const menuDirections = {
+      ArrowLeft: 'left',
+      ArrowRight: 'right',
+      ArrowUp: 'up',
+      ArrowDown: 'down',
+      KeyA: 'left',
+      KeyD: 'right',
+      KeyW: 'up',
+      KeyS: 'down',
+    };
+    const menuDirection = menuDirections[event.code];
+    if (menuDirection) {
+      moveMenuFocus(menuDirection);
+      return;
+    }
     if ((event.code === 'Enter' || event.code === 'Space') && gameButtons.includes(document.activeElement)) {
       event.preventDefault();
       loadGame(document.activeElement.dataset.gameId);

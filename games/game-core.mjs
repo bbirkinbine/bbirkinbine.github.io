@@ -1,4 +1,4 @@
-export const GAME_IDS = ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids'];
+export const GAME_IDS = ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander'];
 
 export const VECTOR_BREAK_LEVELS = [
   {
@@ -67,6 +67,45 @@ export const VECTOR_BREAK_LEVELS = [
   },
 ];
 
+export const VECTOR_LANDER_MISSIONS = [
+  {
+    name: 'TRANQUILITY',
+    gravity: 32,
+    start: { x: 400, y: 68, vx: 18 },
+    pad: { x: 340, y: 370, w: 120 },
+    terrain: [
+      { x: 0, y: 350 }, { x: 70, y: 382 }, { x: 160, y: 345 },
+      { x: 270, y: 405 }, { x: 320, y: 390 }, { x: 340, y: 370 },
+      { x: 460, y: 370 }, { x: 530, y: 415 }, { x: 650, y: 365 },
+      { x: 740, y: 400 }, { x: 800, y: 380 },
+    ],
+  },
+  {
+    name: 'CRATER RUN',
+    gravity: 35,
+    start: { x: 520, y: 64, vx: -32 },
+    pad: { x: 90, y: 392, w: 100 },
+    terrain: [
+      { x: 0, y: 360 }, { x: 60, y: 425 }, { x: 90, y: 392 },
+      { x: 190, y: 392 }, { x: 250, y: 348 }, { x: 335, y: 418 },
+      { x: 430, y: 372 }, { x: 520, y: 430 }, { x: 610, y: 355 },
+      { x: 700, y: 410 }, { x: 800, y: 368 },
+    ],
+  },
+  {
+    name: 'NARROW VECTOR',
+    gravity: 38,
+    start: { x: 260, y: 62, vx: 38 },
+    pad: { x: 610, y: 352, w: 80 },
+    terrain: [
+      { x: 0, y: 405 }, { x: 85, y: 350 }, { x: 175, y: 420 },
+      { x: 275, y: 365 }, { x: 360, y: 432 }, { x: 455, y: 355 },
+      { x: 545, y: 415 }, { x: 590, y: 380 }, { x: 610, y: 352 },
+      { x: 690, y: 352 }, { x: 735, y: 405 }, { x: 800, y: 375 },
+    ],
+  },
+];
+
 export function createVectorBreakBricks(level, geometry = {}) {
   const left = geometry.left ?? 44;
   const top = geometry.top ?? 54;
@@ -95,6 +134,58 @@ export function createVectorBreakBricks(level, geometry = {}) {
 
 export function isVectorBreakLevelClear(bricks) {
   return bricks.every((brick) => brick.indestructible || !brick.alive);
+}
+
+export function nextMenuGridIndex(currentIndex, direction, itemCount, columns = 2) {
+  if (itemCount <= 0) return -1;
+  const safeIndex = currentIndex >= 0 && currentIndex < itemCount ? currentIndex : 0;
+  const row = Math.floor(safeIndex / columns);
+  const column = safeIndex % columns;
+
+  if (direction === 'left' || direction === 'right') {
+    const itemsInRow = Math.min(columns, itemCount - row * columns);
+    const offset = direction === 'left' ? -1 : 1;
+    const nextColumn = (column + offset + itemsInRow) % itemsInRow;
+    return row * columns + nextColumn;
+  }
+
+  if (direction === 'up' || direction === 'down') {
+    const rows = Math.ceil(itemCount / columns);
+    const offset = direction === 'up' ? -1 : 1;
+    for (let distance = 1; distance <= rows; distance += 1) {
+      const nextRow = (row + offset * distance + rows) % rows;
+      const nextIndex = nextRow * columns + column;
+      if (nextIndex < itemCount) return nextIndex;
+    }
+  }
+
+  return safeIndex;
+}
+
+export function terrainHeightAtX(terrain, x) {
+  if (x <= terrain[0].x) return terrain[0].y;
+  for (let index = 1; index < terrain.length; index += 1) {
+    const right = terrain[index];
+    if (x <= right.x) {
+      const left = terrain[index - 1];
+      const progress = (x - left.x) / (right.x - left.x);
+      return left.y + (right.y - left.y) * progress;
+    }
+  }
+  return terrain.at(-1).y;
+}
+
+export function isSafeLanderTouchdown(ship, pad, limits = {}) {
+  const maxHorizontalSpeed = limits.maxHorizontalSpeed ?? 30;
+  const maxVerticalSpeed = limits.maxVerticalSpeed ?? 48;
+  const maxAngle = limits.maxAngle ?? 0.2;
+  const radius = ship.r ?? 0;
+  return ship.x - radius >= pad.x
+    && ship.x + radius <= pad.x + pad.w
+    && Math.abs(ship.vx) <= maxHorizontalSpeed
+    && ship.vy >= 0
+    && ship.vy <= maxVerticalSpeed
+    && Math.abs(ship.angle) <= maxAngle;
 }
 
 export function shouldOpenArcade(event, interactiveTarget = false) {

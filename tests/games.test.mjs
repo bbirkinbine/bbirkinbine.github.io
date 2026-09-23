@@ -5,18 +5,58 @@ import { readFile } from 'node:fs/promises';
 import {
   GAME_IDS,
   VECTOR_BREAK_LEVELS,
+  VECTOR_LANDER_MISSIONS,
   circleRectBounceAxis,
   circleRectHit,
   createVectorBreakBricks,
   isVectorBreakLevelClear,
+  isSafeLanderTouchdown,
+  nextMenuGridIndex,
   nextSnakeHead,
   rectsOverlap,
   shouldOpenArcade,
+  terrainHeightAtX,
   wrapPoint,
 } from '../games/game-core.mjs';
 
-test('the game menu exposes four distinct arcade programs', () => {
-  assert.deepEqual(GAME_IDS, ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids']);
+test('the game menu exposes five distinct arcade programs', () => {
+  assert.deepEqual(GAME_IDS, ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander']);
+});
+
+test('the game menu navigates its two-column grid in every direction', () => {
+  assert.equal(nextMenuGridIndex(0, 'right', 5), 1);
+  assert.equal(nextMenuGridIndex(1, 'left', 5), 0);
+  assert.equal(nextMenuGridIndex(0, 'down', 5), 2);
+  assert.equal(nextMenuGridIndex(2, 'down', 5), 4);
+  assert.equal(nextMenuGridIndex(4, 'up', 5), 2);
+  assert.equal(nextMenuGridIndex(1, 'down', 5), 3);
+  assert.equal(nextMenuGridIndex(3, 'down', 5), 1);
+  assert.equal(nextMenuGridIndex(4, 'right', 5), 4);
+  assert.equal(nextMenuGridIndex(4, 'down', 5), 0);
+});
+
+test('Vector Lander missions contain ordered terrain and reachable landing pads', () => {
+  assert.equal(VECTOR_LANDER_MISSIONS.length, 3);
+  VECTOR_LANDER_MISSIONS.forEach((mission) => {
+    assert.ok(mission.name);
+    assert.ok(mission.gravity > 0);
+    assert.ok(mission.terrain.length >= 2);
+    for (let index = 1; index < mission.terrain.length; index += 1) {
+      assert.ok(mission.terrain[index].x > mission.terrain[index - 1].x);
+    }
+    assert.equal(terrainHeightAtX(mission.terrain, mission.pad.x), mission.pad.y);
+    assert.equal(terrainHeightAtX(mission.terrain, mission.pad.x + mission.pad.w), mission.pad.y);
+  });
+});
+
+test('Vector Lander interpolates terrain and enforces safe touchdown limits', () => {
+  assert.equal(terrainHeightAtX([{ x: 0, y: 100 }, { x: 100, y: 200 }], 25), 125);
+  const pad = { x: 100, y: 300, w: 100 };
+  const safeShip = { x: 150, r: 13, vx: 20, vy: 40, angle: 0.1 };
+  assert.equal(isSafeLanderTouchdown(safeShip, pad), true);
+  assert.equal(isSafeLanderTouchdown({ ...safeShip, vy: 60 }, pad), false);
+  assert.equal(isSafeLanderTouchdown({ ...safeShip, angle: 0.4 }, pad), false);
+  assert.equal(isSafeLanderTouchdown({ ...safeShip, x: 105 }, pad), false);
 });
 
 test('Vector Break provides six valid, distinct level layouts', () => {
@@ -96,7 +136,7 @@ test('the homepage loads the hidden Enter-key launcher', async () => {
   assert.match(homepage, /easter-egg\.mjs/);
 });
 
-test('the unlinked games page exposes a canvas and the four-game selector', async () => {
+test('the unlinked games page exposes a canvas and the five-game selector', async () => {
   const page = await readFile(new URL('../games/index.html', import.meta.url), 'utf8');
   assert.match(page, /<canvas[^>]+id="game-canvas"/);
   assert.match(page, /<nav[^>]+id="game-menu"/);
@@ -104,5 +144,6 @@ test('the unlinked games page exposes a canvas and the four-game selector', asyn
   assert.match(page, /VECTOR SNAKE/);
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
+  assert.match(page, /VECTOR LANDER/);
   assert.doesNotMatch(page, /STAR DODGE/);
 });

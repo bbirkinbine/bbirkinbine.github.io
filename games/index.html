@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>Arcade Interrupt | Brian Birkinbine</title>
-    <meta name="description" content="A hidden monochrome arcade cabinet featuring VECTOR BREAK, VECTOR SNAKE, VECTOR INVADERS, and VECTOR ASTEROIDS." />
+    <meta name="description" content="A hidden monochrome arcade cabinet featuring VECTOR BREAK, VECTOR SNAKE, VECTOR INVADERS, VECTOR ASTEROIDS, and VECTOR LANDER." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=VT323&amp;display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="arcade.css?v=20260923-1" />
-    <script type="module" src="arcade.mjs?v=20260923-2"></script>
+    <script type="module" src="arcade.mjs?v=20260923-4"></script>
   </head>
   <body>
     <main class="arcade-shell">
@@ -49,13 +49,17 @@
               <strong>VECTOR ASTEROIDS</strong>
               <span>Survive the debris field</span>
             </button>
+            <button type="button" data-game-id="vector-lander">
+              <strong>VECTOR LANDER</strong>
+              <span>Touch down before fuel runs dry</span>
+            </button>
           </div>
-          <p class="menu-help">↑ ↓ / W S TO CHOOSE &nbsp; ENTER / SPACE TO PLAY</p>
+          <p class="menu-help">ARROWS / WASD TO CHOOSE &nbsp; ENTER / SPACE TO PLAY</p>
         </nav>
       </section>
 
       <div class="cabinet-controls">
-        <p id="instructions">SELECT: ↑ ↓ / W S &nbsp; PLAY: ENTER OR SPACE</p>
+        <p id="instructions">SELECT: ARROWS / WASD &nbsp; PLAY: ENTER OR SPACE</p>
         <div class="button-row">
           <button id="game-menu-button" type="button">GAME MENU</button>
           <a href="/">RETURN HOME</a>
