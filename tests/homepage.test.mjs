@@ -155,6 +155,20 @@ test('the Konami event unlocks Origin Code and keeps it in later selector cycles
   assert.equal(unlockedRedGrid.root.dataset.style, 'origin-code');
 });
 
+test('Origin Code uses a dedicated pixel-shooter scene rather than Vector Field artwork', async () => {
+  const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+
+  assert.match(homepage, /class="origin-flight"/);
+  assert.match(homepage, /class="origin-ship"/);
+  assert.match(homepage, /class="origin-power-meter"/);
+  assert.match(homepage, />SPEED UP</);
+  assert.match(homepage, />OPTION</);
+  assert.match(styles, /shape-rendering='crispEdges'/);
+  assert.match(styles, /animation:\s*origin-scroll/);
+  assert.match(styles, /image-rendering:\s*pixelated/);
+});
+
 test('Vector Field is the default until the visitor uses the selector', async () => {
   const themeScript = await readFile(new URL('../theme.js', import.meta.url), 'utf8');
   const firstVisit = runThemeScript(themeScript);

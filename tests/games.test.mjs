@@ -218,7 +218,7 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260924-11/);
+  assert.match(homepage, /easter-egg\.mjs\?v=20260924-12/);
 });
 
 test('the homepage launcher includes the Konami, WarGames, sudo, and source-code clues', async () => {
@@ -228,8 +228,13 @@ test('the homepage launcher includes the Konami, WarGames, sudo, and source-code
   assert.match(homepage, /Some passwords are names\. Some codes begin with two steps up\./);
   assert.match(launcher, /ORIGIN CODE ACCEPTED/);
   assert.match(launcher, /GREETINGS PROFESSOR FALKEN\./);
+  assert.match(launcher, /dataset\.choice = 'yes'/);
+  assert.match(launcher, /dataset\.choice = 'no'/);
+  assert.match(launcher, /event\.key\.toLowerCase\(\) === 'y'/);
+  assert.match(launcher, /event\.key\.toLowerCase\(\) === 'n'/);
+  assert.match(launcher, /duration = 5000/);
   assert.match(launcher, /visitor is not in the sudoers file\./);
-  assert.match(launcher, /source=joshua/);
+  assert.match(launcher, /openArcade\('joshua'\)/);
 });
 
 test('the arcade build uses one version across its page and launchers', async () => {
