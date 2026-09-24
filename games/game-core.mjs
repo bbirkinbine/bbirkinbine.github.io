@@ -1,4 +1,26 @@
-export const GAME_IDS = ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander', 'origin-flight'];
+export const GAME_IDS = [
+  'vector-break',
+  'vector-snake',
+  'vector-invaders',
+  'vector-asteroids',
+  'vector-lander',
+  'defcon-command',
+  'origin-flight',
+];
+
+export function missilePointAt(missile, progress) {
+  const t = Math.max(0, Math.min(1, progress));
+  return {
+    x: missile.startX + (missile.targetX - missile.startX) * t,
+    y: missile.startY + (missile.targetY - missile.startY) * t,
+  };
+}
+
+export function closestArmedSilo(silos, targetX) {
+  return silos
+    .filter((silo) => silo.ammo > 0 && silo.active !== false)
+    .sort((left, right) => Math.abs(left.x - targetX) - Math.abs(right.x - targetX))[0] ?? null;
+}
 
 export const ORIGIN_POWER_STEPS = Object.freeze([
   'SPEED UP',

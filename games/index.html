@@ -6,14 +6,14 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="robots" content="noindex" />
     <title>Arcade Interrupt | Brian Birkinbine</title>
-    <meta name="description" content="A hidden arcade cabinet featuring five vector programs and the pixel-scrolling ORIGIN FLIGHT." />
+    <meta name="description" content="A hidden arcade cabinet featuring five vector programs and two secret-code exclusives." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=VT323&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="arcade.css?v=20260924-15" />
+    <link rel="stylesheet" href="arcade.css?v=20260924-17" />
     <script>
       (() => {
-        const renderedVersion = '20260924-15';
+        const renderedVersion = '20260924-17';
         const versionUrl = new URL('version.json', window.location.href);
         versionUrl.searchParams.set('refresh', Date.now());
 
@@ -34,7 +34,7 @@
           .catch(() => {});
       })();
     </script>
-    <script type="module" src="arcade.mjs?v=20260924-15"></script>
+    <script type="module" src="arcade.mjs?v=20260924-17"></script>
   </head>
   <body>
     <main class="arcade-shell">
@@ -45,7 +45,7 @@
         </div>
         <div class="hud" aria-live="polite">
           <span>SCORE <strong id="score">000000</strong></span>
-          <span>SHIPS <strong id="lives">03</strong></span>
+          <span><b id="lives-label">SHIPS</b> <strong id="lives">03</strong></span>
         </div>
       </header>
 
@@ -76,6 +76,10 @@
             <button type="button" data-game-id="vector-lander">
               <strong>VECTOR LANDER</strong>
               <span>Six fuel-balanced mountain missions</span>
+            </button>
+            <button type="button" data-game-id="defcon-command" hidden>
+              <strong>DEFCON COMMAND <small class="exclusive-tag exclusive-tag--joshua">[JOSHUA EXCLUSIVE]</small></strong>
+              <span>Intercept every inbound warhead</span>
             </button>
             <button type="button" data-game-id="origin-flight" hidden>
               <strong>ORIGIN FLIGHT <small class="exclusive-tag">[KONAMI CODE EXCLUSIVE]</small></strong>

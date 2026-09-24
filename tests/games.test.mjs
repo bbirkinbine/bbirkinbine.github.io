@@ -15,11 +15,13 @@ import {
   burnLanderFuel,
   circleRectBounceAxis,
   circleRectHit,
+  closestArmedSilo,
   createVectorBreakBricks,
   estimateLanderFuelUse,
   isVectorBreakLevelClear,
   isSafeLanderTouchdown,
   landerCameraTarget,
+  missilePointAt,
   nextMenuGridIndex,
   nextSnakeHead,
   originTunnelBoundsAt,
@@ -30,8 +32,16 @@ import {
   wrapPoint,
 } from '../games/game-core.mjs';
 
-test('the game menu exposes six distinct arcade programs', () => {
-  assert.deepEqual(GAME_IDS, ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander', 'origin-flight']);
+test('the game menu exposes five core programs and two secret-code exclusives', () => {
+  assert.deepEqual(GAME_IDS, [
+    'vector-break',
+    'vector-snake',
+    'vector-invaders',
+    'vector-asteroids',
+    'vector-lander',
+    'defcon-command',
+    'origin-flight',
+  ]);
 });
 
 test('the game menu navigates its two-column grid in every direction', () => {
@@ -44,6 +54,21 @@ test('the game menu navigates its two-column grid in every direction', () => {
   assert.equal(nextMenuGridIndex(3, 'down', 6), 5);
   assert.equal(nextMenuGridIndex(5, 'down', 6), 1);
   assert.equal(nextMenuGridIndex(4, 'right', 6), 5);
+  assert.equal(nextMenuGridIndex(6, 'right', 7), 6);
+  assert.equal(nextMenuGridIndex(4, 'down', 7), 6);
+});
+
+test('DEFCON Command interpolates missile flight and chooses the nearest armed silo', () => {
+  const missile = { startX: 100, startY: 20, targetX: 500, targetY: 420 };
+  assert.deepEqual(missilePointAt(missile, 0.25), { x: 200, y: 120 });
+  assert.deepEqual(missilePointAt(missile, 2), { x: 500, y: 420 });
+  const silos = [
+    { x: 80, ammo: 0, active: true },
+    { x: 400, ammo: 4, active: true },
+    { x: 720, ammo: 7, active: false },
+  ];
+  assert.equal(closestArmedSilo(silos, 120), silos[1]);
+  assert.equal(closestArmedSilo(silos.map((silo) => ({ ...silo, ammo: 0 })), 120), null);
 });
 
 test('Origin Flight cycles through the classic six-slot power meter', () => {
@@ -279,7 +304,7 @@ test('the arcade build uses one version across its page and launchers', async ()
   assert.match(arcade, new RegExp(`game-core\\.mjs\\?v=${version}`));
 });
 
-test('the unlinked games page exposes a cache refresh check and the six-game selector', async () => {
+test('the unlinked games page exposes a cache refresh check and the seven-game selector', async () => {
   const page = await readFile(new URL('../games/index.html', import.meta.url), 'utf8');
   assert.match(page, /<canvas[^>]+id="game-canvas"/);
   assert.match(page, /<nav[^>]+id="game-menu"/);
@@ -291,10 +316,28 @@ test('the unlinked games page exposes a cache refresh check and the six-game sel
   assert.match(page, /VECTOR SNAKE/);
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
+  assert.match(page, /DEFCON COMMAND/);
+  assert.match(page, /\[JOSHUA EXCLUSIVE\]/);
+  assert.match(page, /data-game-id="defcon-command" hidden/);
   assert.match(page, /ORIGIN FLIGHT/);
   assert.match(page, /\[KONAMI CODE EXCLUSIVE\]/);
   assert.match(page, /data-game-id="origin-flight" hidden/);
   assert.doesNotMatch(page, /STAR DODGE/);
+});
+
+test('DEFCON Command is a persistent JOSHUA-exclusive missile-defense program', async () => {
+  const [launcher, arcade] = await Promise.all([
+    readFile(new URL('../easter-egg.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8'),
+  ]);
+  assert.match(launcher, /localStorage\.setItem\('bb-joshua-game-unlocked', '1'\)/);
+  assert.match(arcade, /class DefconCommand/);
+  assert.match(arcade, /localStorage\.getItem\('bb-joshua-game-unlocked'\) === '1'/);
+  assert.match(arcade, /launchSource === 'joshua'/);
+  assert.match(arcade, /closestArmedSilo/);
+  assert.match(arcade, /missilePointAt/);
+  assert.match(arcade, /if \(id === 'defcon-command'\) return new DefconCommand\(\)/);
+  assert.match(arcade, /body\.classList\.toggle\('wargames-game', id === 'defcon-command'\)/);
 });
 
 test('Origin Flight renders a dedicated pixel scroller with upgrades and touch-compatible controls', async () => {

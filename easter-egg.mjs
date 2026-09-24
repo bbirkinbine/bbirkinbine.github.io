@@ -4,7 +4,7 @@ import {
   appendTypedSecret,
   shouldOpenArcade,
   typedSecretAction,
-} from './games/game-core.mjs?v=20260924-15';
+} from './games/game-core.mjs?v=20260924-17';
 
 let konamiProgress = 0;
 let typedBuffer = '';
@@ -119,8 +119,15 @@ function showChoicePrompt(lines, { onYes, onNo }) {
 
 function openArcade(source = 'enter') {
   if (navigating) return;
+  if (source === 'joshua') {
+    try {
+      window.localStorage.setItem('bb-joshua-game-unlocked', '1');
+    } catch {
+      // The source query still grants access for this visit when storage is unavailable.
+    }
+  }
   navigating = true;
-  window.location.assign(`games/index.html?v=20260924-15&source=${source}`);
+  window.location.assign(`games/index.html?v=20260924-17&source=${source}`);
 }
 
 window.addEventListener('keydown', (event) => {
