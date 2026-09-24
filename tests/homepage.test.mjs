@@ -3,16 +3,22 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 
-const runThemeScript = (themeScript, { savedStyle = null, originUnlocked = false } = {}) => {
+const runThemeScript = (
+  themeScript,
+  { savedStyle = null, originUnlocked = false, joshuaUnlocked = false, reset = false } = {},
+) => {
   const documentListeners = {};
   const toggleListeners = {};
   const attributes = {};
+  const removed = [];
+  const historyState = { url: null };
   const writes = [];
   const toggleState = { blurCount: 0 };
   const root = { dataset: {} };
   const storage = new Map();
   if (savedStyle) storage.set('bb-style', savedStyle);
   if (originUnlocked) storage.set('bb-origin-code-unlocked', '1');
+  if (joshuaUnlocked) storage.set('bb-joshua-game-unlocked', '1');
   const toggle = {
     addEventListener(type, listener) {
       toggleListeners[type] = listener;
@@ -43,11 +49,35 @@ const runThemeScript = (themeScript, { savedStyle = null, originUnlocked = false
         storage.set(key, value);
         writes.push([key, value]);
       },
+      removeItem(key) {
+        storage.delete(key);
+        removed.push(key);
+      },
+    },
+    location: {
+      search: reset ? '?reset-easter-eggs=1' : '',
+      pathname: '/index.html',
+      hash: '',
+    },
+    history: {
+      replaceState(_state, _title, url) {
+        historyState.url = url;
+      },
     },
   };
 
   runInNewContext(themeScript, context);
-  return { attributes, documentListeners, root, storage, toggleListeners, toggleState, writes };
+  return {
+    attributes,
+    documentListeners,
+    historyState,
+    removed,
+    root,
+    storage,
+    toggleListeners,
+    toggleState,
+    writes,
+  };
 };
 
 test('the homepage exposes an accessible responsive halftone portrait', async () => {
@@ -153,6 +183,25 @@ test('the Konami event unlocks Origin Code and keeps it in later selector cycles
   unlockedRedGrid.documentListeners.DOMContentLoaded();
   unlockedRedGrid.toggleListeners.click({ detail: 1 });
   assert.equal(unlockedRedGrid.root.dataset.style, 'origin-code');
+});
+
+test('the reset URL clears both exclusive unlocks before the style selector initializes', async () => {
+  const themeScript = await readFile(new URL('../theme.js', import.meta.url), 'utf8');
+  const resetVisit = runThemeScript(themeScript, {
+    savedStyle: 'origin-code',
+    originUnlocked: true,
+    joshuaUnlocked: true,
+    reset: true,
+  });
+
+  assert.equal(resetVisit.root.dataset.style, 'vector-field');
+  assert.deepEqual([...resetVisit.storage.entries()], []);
+  assert.deepEqual(resetVisit.removed, [
+    'bb-style',
+    'bb-origin-code-unlocked',
+    'bb-joshua-game-unlocked',
+  ]);
+  assert.equal(resetVisit.historyState.url, '/index.html');
 });
 
 test('Origin Code uses a dedicated pixel-shooter scene rather than Vector Field artwork', async () => {

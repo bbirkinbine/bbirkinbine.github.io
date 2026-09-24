@@ -1,6 +1,7 @@
 (() => {
   const storageKey = "bb-style";
   const originUnlockKey = "bb-origin-code-unlocked";
+  const joshuaUnlockKey = "bb-joshua-game-unlocked";
   const root = document.documentElement;
   const standardStyles = [
     { id: "terminal", label: "Terminal" },
@@ -13,6 +14,26 @@
   let savedStyleId;
   let originUnlocked = false;
   let updateLabels = () => {};
+
+  const resetRequested = /(?:^|[?&])reset-easter-eggs=1(?:&|$)/.test(
+    globalThis.location?.search ?? "",
+  );
+
+  if (resetRequested) {
+    try {
+      [storageKey, originUnlockKey, joshuaUnlockKey].forEach((key) => localStorage.removeItem(key));
+    } catch {
+      // The normal defaults still apply when storage is unavailable.
+    }
+
+    if (globalThis.history?.replaceState && globalThis.location) {
+      globalThis.history.replaceState(
+        null,
+        "",
+        `${globalThis.location.pathname}${globalThis.location.hash}`,
+      );
+    }
+  }
 
   const findStyle = (id) => styles.find((style) => style.id === id);
 
