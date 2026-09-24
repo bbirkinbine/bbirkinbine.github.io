@@ -4,39 +4,91 @@ import { readFile } from 'node:fs/promises';
 
 import {
   GAME_IDS,
+  KONAMI_SEQUENCE,
+  ORIGIN_POWER_STEPS,
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  advanceSequenceProgress,
+  advanceOriginPower,
+  appendTypedSecret,
   arcadeEscapeAction,
   burnLanderFuel,
   circleRectBounceAxis,
   circleRectHit,
+  closestArmedSilo,
   createVectorBreakBricks,
   estimateLanderFuelUse,
   isVectorBreakLevelClear,
   isSafeLanderTouchdown,
   landerCameraTarget,
+  missilePointAt,
   nextMenuGridIndex,
   nextSnakeHead,
+  originTunnelBoundsAt,
   rectsOverlap,
   shouldOpenArcade,
   terrainHeightAtX,
+  typedSecretAction,
   wrapPoint,
 } from '../games/game-core.mjs';
 
-test('the game menu exposes five distinct arcade programs', () => {
-  assert.deepEqual(GAME_IDS, ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander']);
+test('the game menu exposes five core programs and two secret-code exclusives', () => {
+  assert.deepEqual(GAME_IDS, [
+    'vector-break',
+    'vector-snake',
+    'vector-invaders',
+    'vector-asteroids',
+    'vector-lander',
+    'defcon-command',
+    'origin-flight',
+  ]);
 });
 
 test('the game menu navigates its two-column grid in every direction', () => {
-  assert.equal(nextMenuGridIndex(0, 'right', 5), 1);
-  assert.equal(nextMenuGridIndex(1, 'left', 5), 0);
-  assert.equal(nextMenuGridIndex(0, 'down', 5), 2);
-  assert.equal(nextMenuGridIndex(2, 'down', 5), 4);
-  assert.equal(nextMenuGridIndex(4, 'up', 5), 2);
-  assert.equal(nextMenuGridIndex(1, 'down', 5), 3);
-  assert.equal(nextMenuGridIndex(3, 'down', 5), 1);
-  assert.equal(nextMenuGridIndex(4, 'right', 5), 4);
-  assert.equal(nextMenuGridIndex(4, 'down', 5), 0);
+  assert.equal(nextMenuGridIndex(0, 'right', 6), 1);
+  assert.equal(nextMenuGridIndex(1, 'left', 6), 0);
+  assert.equal(nextMenuGridIndex(0, 'down', 6), 2);
+  assert.equal(nextMenuGridIndex(2, 'down', 6), 4);
+  assert.equal(nextMenuGridIndex(4, 'up', 6), 2);
+  assert.equal(nextMenuGridIndex(1, 'down', 6), 3);
+  assert.equal(nextMenuGridIndex(3, 'down', 6), 5);
+  assert.equal(nextMenuGridIndex(5, 'down', 6), 1);
+  assert.equal(nextMenuGridIndex(4, 'right', 6), 5);
+  assert.equal(nextMenuGridIndex(6, 'right', 7), 6);
+  assert.equal(nextMenuGridIndex(4, 'down', 7), 6);
+});
+
+test('DEFCON Command interpolates missile flight and chooses the nearest armed silo', () => {
+  const missile = { startX: 100, startY: 20, targetX: 500, targetY: 420 };
+  assert.deepEqual(missilePointAt(missile, 0.25), { x: 200, y: 120 });
+  assert.deepEqual(missilePointAt(missile, 2), { x: 500, y: 420 });
+  const silos = [
+    { x: 80, ammo: 0, active: true },
+    { x: 400, ammo: 4, active: true },
+    { x: 720, ammo: 7, active: false },
+  ];
+  assert.equal(closestArmedSilo(silos, 120), silos[1]);
+  assert.equal(closestArmedSilo(silos.map((silo) => ({ ...silo, ammo: 0 })), 120), null);
+});
+
+test('Origin Flight cycles through the classic six-slot power meter', () => {
+  assert.deepEqual(ORIGIN_POWER_STEPS, ['SPEED UP', 'MISSILE', 'DOUBLE', 'LASER', 'OPTION', 'SHIELD']);
+  assert.deepEqual(advanceOriginPower(0), { upgrade: 'SPEED UP', nextIndex: 1 });
+  assert.deepEqual(advanceOriginPower(5), { upgrade: 'SHIELD', nextIndex: 0 });
+  assert.deepEqual(advanceOriginPower(-1), { upgrade: 'SPEED UP', nextIndex: 1 });
+});
+
+test('Origin Flight terrain stays stepped and leaves a playable tunnel', () => {
+  for (let wave = 1; wave <= 12; wave += 1) {
+    for (let x = 0; x <= 2400; x += 37) {
+      const bounds = originTunnelBoundsAt(x, 813, wave);
+      assert.equal(bounds.top % 8, 0);
+      assert.equal(bounds.bottom % 8, 0);
+      assert.ok(bounds.top >= 32);
+      assert.ok(bounds.bottom <= 448);
+      assert.ok(bounds.bottom - bounds.top >= 190);
+    }
+  }
 });
 
 test('Escape opens the menu from a game and returns home from the menu', () => {
@@ -161,6 +213,29 @@ test('shouldOpenArcade accepts a plain non-repeating Enter press only', () => {
   assert.equal(shouldOpenArcade(enter, true), false);
 });
 
+test('the Konami sequence progresses, recovers, and completes deterministically', () => {
+  let progress = 0;
+  KONAMI_SEQUENCE.forEach((code) => {
+    progress = advanceSequenceProgress(KONAMI_SEQUENCE, progress, code);
+  });
+  assert.equal(progress, KONAMI_SEQUENCE.length);
+  assert.equal(advanceSequenceProgress(KONAMI_SEQUENCE, 5, 'Escape'), 0);
+  assert.equal(advanceSequenceProgress(KONAMI_SEQUENCE, 5, 'ArrowUp'), 1);
+});
+
+test('typed Easter-egg commands recognize JOSHUA and sudo without capturing punctuation', () => {
+  let buffer = '';
+  for (const key of ['J', 'o', 's', 'h', 'u', 'a']) buffer = appendTypedSecret(buffer, key);
+  assert.equal(buffer, 'joshua');
+  assert.equal(typedSecretAction(buffer), 'wargames');
+
+  buffer = '';
+  for (const key of ['s', 'u', '-', 'd', 'o']) buffer = appendTypedSecret(buffer, key);
+  assert.equal(buffer, 'sudo');
+  assert.equal(typedSecretAction(buffer), 'sudo');
+  assert.equal(typedSecretAction('ordinary'), null);
+});
+
 test('circleRectHit detects contact and rejects a clear miss', () => {
   assert.equal(circleRectHit({ x: 10, y: 10, r: 3 }, { x: 12, y: 8, w: 10, h: 6 }), true);
   assert.equal(circleRectHit({ x: 1, y: 1, r: 1 }, { x: 12, y: 8, w: 10, h: 6 }), false);
@@ -191,7 +266,25 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260923-10/);
+  assert.match(homepage, /easter-egg\.mjs\?v=\d+/);
+});
+
+test('the homepage launcher includes the Konami, WarGames, sudo, and source-code clues', async () => {
+  const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const launcher = await readFile(new URL('../easter-egg.mjs', import.meta.url), 'utf8');
+
+  assert.match(homepage, /Some passwords are names\. Some codes begin with two steps up\./);
+  assert.match(launcher, /ORIGIN CODE ACCEPTED/);
+  assert.match(launcher, /GREETINGS PROFESSOR FALKEN\./);
+  assert.match(launcher, /dataset\.choice = 'yes'/);
+  assert.match(launcher, /dataset\.choice = 'no'/);
+  assert.match(launcher, /event\.key\.toLowerCase\(\) === 'y'/);
+  assert.match(launcher, /event\.key\.toLowerCase\(\) === 'n'/);
+  assert.match(launcher, /\['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'\]/);
+  assert.match(launcher, /nextChoice\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(launcher, /duration = 5000/);
+  assert.match(launcher, /visitor is not in the sudoers file\./);
+  assert.match(launcher, /openArcade\('joshua'\)/);
 });
 
 test('the arcade build uses one version across its page and launchers', async () => {
@@ -204,13 +297,14 @@ test('the arcade build uses one version across its page and launchers', async ()
   assert.ok(version);
   assert.match(homepage, new RegExp(`easter-egg\\.mjs\\?v=${version}`));
   assert.match(launcher, new RegExp(`game-core\\.mjs\\?v=${version}`));
-  assert.match(launcher, new RegExp(`/games/\\?v=${version}`));
+  assert.match(launcher, new RegExp(`games/index\\.html\\?v=${version}`));
   assert.match(page, new RegExp(`renderedVersion = '${version}'`));
+  assert.match(page, new RegExp(`arcade\\.css\\?v=${version}`));
   assert.match(page, new RegExp(`arcade\\.mjs\\?v=${version}`));
   assert.match(arcade, new RegExp(`game-core\\.mjs\\?v=${version}`));
 });
 
-test('the unlinked games page exposes a cache refresh check and the five-game selector', async () => {
+test('the unlinked games page exposes a cache refresh check and the seven-game selector', async () => {
   const page = await readFile(new URL('../games/index.html', import.meta.url), 'utf8');
   assert.match(page, /<canvas[^>]+id="game-canvas"/);
   assert.match(page, /<nav[^>]+id="game-menu"/);
@@ -222,7 +316,43 @@ test('the unlinked games page exposes a cache refresh check and the five-game se
   assert.match(page, /VECTOR SNAKE/);
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
+  assert.match(page, /DEFCON COMMAND/);
+  assert.match(page, /\[JOSHUA EXCLUSIVE\]/);
+  assert.match(page, /data-game-id="defcon-command" hidden/);
+  assert.match(page, /ORIGIN FLIGHT/);
+  assert.match(page, /\[KONAMI CODE EXCLUSIVE\]/);
+  assert.match(page, /data-game-id="origin-flight" hidden/);
   assert.doesNotMatch(page, /STAR DODGE/);
+});
+
+test('DEFCON Command is a persistent JOSHUA-exclusive missile-defense program', async () => {
+  const [launcher, arcade] = await Promise.all([
+    readFile(new URL('../easter-egg.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8'),
+  ]);
+  assert.match(launcher, /localStorage\.setItem\('bb-joshua-game-unlocked', '1'\)/);
+  assert.match(launcher, /localStorage\.setItem\('bb-wopr-theme-unlocked', '1'\)/);
+  assert.match(launcher, /localStorage\.setItem\('bb-style', 'wopr'\)/);
+  assert.match(arcade, /class DefconCommand/);
+  assert.match(arcade, /localStorage\.getItem\('bb-joshua-game-unlocked'\) === '1'/);
+  assert.match(arcade, /launchSource === 'joshua'/);
+  assert.match(arcade, /localStorage\.setItem\('bb-wopr-theme-unlocked', '1'\)/);
+  assert.match(arcade, /closestArmedSilo/);
+  assert.match(arcade, /missilePointAt/);
+  assert.match(arcade, /if \(id === 'defcon-command'\) return new DefconCommand\(\)/);
+  assert.match(arcade, /body\.classList\.toggle\('wargames-game', id === 'defcon-command'\)/);
+});
+
+test('Origin Flight renders a dedicated pixel scroller with upgrades and touch-compatible controls', async () => {
+  const arcade = await readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8');
+  assert.match(arcade, /class OriginFlight/);
+  assert.match(arcade, /originTunnelBoundsAt/);
+  assert.match(arcade, /ORIGIN_POWER_STEPS/);
+  assert.match(arcade, /drawPixelShip/);
+  assert.match(arcade, /localStorage\.getItem\('bb-origin-code-unlocked'\) === '1'/);
+  assert.match(arcade, /originFlightButton\.hidden = !originFlightUnlocked/);
+  assert.match(arcade, /data-control="action"|touchActionButton/);
+  assert.match(arcade, /if \(id === 'origin-flight'\) return new OriginFlight\(\)/);
 });
 
 test('Vector Lander exposes an unlimited fuel hotkey and status display', async () => {

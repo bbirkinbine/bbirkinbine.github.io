@@ -1,4 +1,62 @@
-export const GAME_IDS = ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander'];
+export const GAME_IDS = [
+  'vector-break',
+  'vector-snake',
+  'vector-invaders',
+  'vector-asteroids',
+  'vector-lander',
+  'defcon-command',
+  'origin-flight',
+];
+
+export function missilePointAt(missile, progress) {
+  const t = Math.max(0, Math.min(1, progress));
+  return {
+    x: missile.startX + (missile.targetX - missile.startX) * t,
+    y: missile.startY + (missile.targetY - missile.startY) * t,
+  };
+}
+
+export function closestArmedSilo(silos, targetX) {
+  return silos
+    .filter((silo) => silo.ammo > 0 && silo.active !== false)
+    .sort((left, right) => Math.abs(left.x - targetX) - Math.abs(right.x - targetX))[0] ?? null;
+}
+
+export const ORIGIN_POWER_STEPS = Object.freeze([
+  'SPEED UP',
+  'MISSILE',
+  'DOUBLE',
+  'LASER',
+  'OPTION',
+  'SHIELD',
+]);
+
+export function advanceOriginPower(currentIndex) {
+  const safeIndex = Number.isInteger(currentIndex) && currentIndex >= 0
+    ? currentIndex % ORIGIN_POWER_STEPS.length
+    : 0;
+  return {
+    upgrade: ORIGIN_POWER_STEPS[safeIndex],
+    nextIndex: (safeIndex + 1) % ORIGIN_POWER_STEPS.length,
+  };
+}
+
+export function originTunnelBoundsAt(x, scroll = 0, wave = 1) {
+  const distance = x + scroll;
+  const squeeze = Math.min(32, Math.max(0, wave - 1) * 2.5);
+  const topRaw = 50
+    + Math.sin(distance / 91) * 19
+    + Math.sin(distance / 37) * 7
+    + (Math.floor(distance / 192) % 3) * 5
+    + squeeze;
+  const bottomRaw = 428
+    + Math.sin(distance / 109 + 1.35) * 23
+    + Math.sin(distance / 43 + 0.55) * 6
+    - squeeze;
+  const top = Math.max(32, Math.min(138, Math.round(topRaw / 8) * 8));
+  const bottom = Math.max(top + 190, Math.min(448, Math.round(bottomRaw / 8) * 8));
+  return { top, bottom };
+}
 
 export const VECTOR_BREAK_LEVELS = [
   {
@@ -323,6 +381,38 @@ export function shouldOpenArcade(event, interactiveTarget = false) {
     && !event.metaKey
     && !event.shiftKey
     && !interactiveTarget;
+}
+
+export const KONAMI_SEQUENCE = Object.freeze([
+  'ArrowUp',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowRight',
+  'KeyB',
+  'KeyA',
+]);
+
+export function advanceSequenceProgress(sequence, progress, input) {
+  if (!Array.isArray(sequence) || sequence.length === 0) return 0;
+  if (input === sequence[progress]) return progress + 1;
+  return input === sequence[0] ? 1 : 0;
+}
+
+export function appendTypedSecret(buffer, key, maxLength = 12) {
+  if (typeof key !== 'string' || key.length !== 1 || !/[a-z]/i.test(key)) {
+    return buffer;
+  }
+  return `${buffer}${key.toLowerCase()}`.slice(-maxLength);
+}
+
+export function typedSecretAction(buffer) {
+  if (buffer.endsWith('joshua')) return 'wargames';
+  if (buffer.endsWith('sudo')) return 'sudo';
+  return null;
 }
 
 export function circleRectHit(circle, rect) {

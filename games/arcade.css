@@ -29,6 +29,60 @@ body {
     var(--cabinet);
 }
 
+body.origin-game {
+  --cabinet: #00030c;
+  --screen: #000718;
+  --phosphor: #3cbcfc;
+  --bright: #f8f8d8;
+  --dim: #0878d8;
+  --line: #164b88;
+  --glass: rgba(60, 188, 252, 0.035);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(8, 120, 216, 0.17), transparent 58%),
+    var(--cabinet);
+}
+
+body.origin-game h1 {
+  text-shadow:
+    3px 0 0 rgba(216, 40, 0, 0.68),
+    0 0 16px rgba(60, 188, 252, 0.48);
+}
+
+body.origin-game .screen-frame {
+  border-left-color: #f07818;
+  box-shadow:
+    0 0 0 6px #001848,
+    0 0 0 7px #0878d8,
+    0 0 36px rgba(60, 188, 252, 0.2);
+}
+
+body.wargames-game {
+  --cabinet: #050200;
+  --screen: #070300;
+  --phosphor: #ffb000;
+  --bright: #ffe6a3;
+  --dim: #bc5b16;
+  --line: #67250d;
+  --glass: rgba(255, 176, 0, 0.035);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(188, 91, 22, 0.18), transparent 58%),
+    var(--cabinet);
+}
+
+body.wargames-game h1 {
+  text-shadow:
+    2px 0 0 rgba(226, 50, 23, 0.65),
+    0 0 16px rgba(255, 176, 0, 0.48);
+}
+
+body.wargames-game .screen-frame {
+  border-left-color: #e23217;
+  box-shadow:
+    0 0 0 6px #160500,
+    0 0 0 7px #67250d,
+    0 0 36px rgba(255, 176, 0, 0.2);
+}
+
 button,
 a {
   color: var(--phosphor);
@@ -86,6 +140,10 @@ h1 {
 .hud strong {
   color: var(--bright);
   font-weight: 500;
+}
+
+.hud b {
+  font-weight: 400;
 }
 
 .screen-frame {
@@ -184,9 +242,35 @@ canvas {
   line-height: 1;
 }
 
+.game-list .exclusive-tag {
+  display: inline;
+  margin-left: 0.45rem;
+  color: #f07818;
+  font-family: "IBM Plex Mono", "Lucida Console", monospace;
+  font-size: 0.38em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .game-list button:hover strong,
 .game-list button:focus-visible strong {
   color: #001405;
+}
+
+.game-list button:hover .exclusive-tag,
+.game-list button:focus-visible .exclusive-tag {
+  color: #7c2400;
+}
+
+.game-list .exclusive-tag--joshua {
+  color: #ffb000;
+}
+
+.game-list button:hover .exclusive-tag--joshua,
+.game-list button:focus-visible .exclusive-tag--joshua {
+  color: #7a3200;
 }
 
 .game-list span {
@@ -287,32 +371,42 @@ canvas {
   }
 
   .game-menu {
-    padding: 0.5rem;
+    padding: 0.35rem 0.5rem;
   }
 
   .menu-prompt {
-    margin-bottom: 0.35rem;
-    font-size: 1.3rem;
+    margin-bottom: 0.2rem;
+    font-size: 1.1rem;
   }
 
   .game-list button {
-    min-height: 2.65rem;
-    padding: 0.35rem 0.55rem;
+    min-height: 2.2rem;
+    padding: 0.22rem 0.48rem;
+  }
+
+  .game-list strong {
+    font-size: 1.05rem;
   }
 
   .game-list span {
     display: none;
   }
 
+  .game-list .exclusive-tag {
+    display: block;
+    margin: 0.15rem 0 0;
+    font-size: 0.4em;
+  }
+
   .menu-help {
-    margin-top: 0.35rem;
-    font-size: 0.5rem;
+    margin-top: 0.2rem;
+    font-size: 0.46rem;
   }
 }
 
 @media (max-width: 420px) {
   .game-list {
-    gap: 0.4rem;
+    gap: 0.3rem;
   }
 
   .game-list span {
