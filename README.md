@@ -8,6 +8,8 @@ A personal profile site with four dark, retro-computing visual styles.
 
 ## Features
 
+- Concise AI-first calling-card copy grounded in 20+ years of security experience
+- Theme-matched prompt favicon
 - Links to GitHub, LinkedIn, Instagram, Bluesky, X, Keybase, and email
 - Plain-language privacy policy and terms of use
 - Terminal, Arcade Night, Vector Field, and Red Grid City styles with distinct palettes, backgrounds, and layouts

@@ -168,38 +168,17 @@ a:focus-visible {
   color: var(--accent);
 }
 
-.work-card {
+.profile-intro {
   position: relative;
-  margin: 2.25rem auto 0;
-  padding: 1.25rem 1.4rem 1.35rem;
-  color: var(--text);
-  text-align: left;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
-  background: var(--surface);
-}
-
-.work-card h2 {
-  margin: 0 0 0.9rem;
-  color: var(--text);
-  font-family: "VT323", "IBM Plex Mono", monospace;
-  font-size: 1.65rem;
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  text-transform: uppercase;
-  text-shadow: var(--glow);
-}
-
-.work-card p {
-  margin: 0;
+  width: min(100%, 44rem);
+  margin: 2rem auto 0;
   color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.65;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  text-align: left;
 }
 
-.work-card .work-lede {
-  margin-bottom: 0.7rem;
+.profile-intro-lede {
   color: var(--text);
   font-weight: 500;
 }
@@ -460,7 +439,7 @@ a:focus-visible {
   display: grid;
   grid-template-areas:
     "portrait title"
-    "portrait work"
+    "portrait intro"
     "portrait links";
   grid-template-columns: minmax(12rem, 0.78fr) minmax(0, 1.55fr);
   gap: 1.15rem 2rem;
@@ -485,14 +464,10 @@ a:focus-visible {
   text-align: left;
 }
 
-:root[data-style="arcade-night"] .work-card {
-  grid-area: work;
+:root[data-style="arcade-night"] .profile-intro {
+  grid-area: intro;
   width: 100%;
   margin: 0;
-  border: 1px solid var(--line);
-  border-top: 4px solid var(--accent);
-  background: var(--surface);
-  box-shadow: 8px 8px 0 color-mix(in srgb, var(--line) 38%, transparent);
 }
 
 :root[data-style="arcade-night"] .profile-links {
@@ -531,7 +506,7 @@ a:focus-visible {
   display: grid;
   grid-template-areas:
     "title portrait"
-    "work portrait"
+    "intro portrait"
     "links portrait";
   grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 0.7fr);
   gap: 1.2rem 2.5rem;
@@ -554,12 +529,10 @@ a:focus-visible {
   text-align: left;
 }
 
-:root[data-style="vector-field"] .work-card {
-  grid-area: work;
+:root[data-style="vector-field"] .profile-intro {
+  grid-area: intro;
   width: 100%;
   margin: 0;
-  clip-path: polygon(0 0, calc(100% - 1.2rem) 0, 100% 1.2rem, 100% 100%, 0 100%);
-  background: var(--surface);
 }
 
 :root[data-style="vector-field"] .profile-links {
@@ -631,14 +604,8 @@ a:focus-visible {
   letter-spacing: 0.1em;
 }
 
-:root[data-style="red-grid"] .work-card {
-  width: min(100%, 780px);
-  border-left-width: 4px;
-  clip-path: polygon(0 0, calc(100% - 1.2rem) 0, 100% 1.2rem, 100% 100%, 1.2rem 100%, 0 calc(100% - 1.2rem));
-  background:
-    linear-gradient(135deg, rgba(255, 69, 38, 0.065), transparent 42%),
-    var(--surface);
-  backdrop-filter: blur(5px);
+:root[data-style="red-grid"] .profile-intro {
+  width: min(100%, 46rem);
 }
 
 :root[data-style="red-grid"] .profile-links a {
@@ -665,8 +632,8 @@ a:focus-visible {
     text-align: center;
   }
 
-  :root[data-style="arcade-night"] .work-card,
-  :root[data-style="vector-field"] .work-card {
+  :root[data-style="arcade-night"] .profile-intro,
+  :root[data-style="vector-field"] .profile-intro {
     margin: 2rem auto 0;
   }
 
@@ -727,11 +694,7 @@ a:focus-visible {
     padding: 1rem;
   }
 
-  .work-card {
-    padding: 1rem;
-  }
-
-  .work-card p {
+  .profile-intro {
     font-size: 0.85rem;
   }
 
@@ -763,7 +726,6 @@ a:focus-visible {
   }
 
   .dot-portrait,
-  .work-card,
   .content-shell section,
   .profile-links a {
     color: CanvasText;
@@ -840,8 +802,8 @@ a:focus-visible {
     text-align: left;
   }
 
-  .work-card,
-  :root[data-style] .work-card,
+  .profile-intro,
+  :root[data-style] .profile-intro,
   .content-shell section {
     width: auto;
     margin: 0.25in 0 0;
