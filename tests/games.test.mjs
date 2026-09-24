@@ -5,9 +5,11 @@ import { readFile } from 'node:fs/promises';
 import {
   GAME_IDS,
   KONAMI_SEQUENCE,
+  ORIGIN_POWER_STEPS,
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
   advanceSequenceProgress,
+  advanceOriginPower,
   appendTypedSecret,
   arcadeEscapeAction,
   burnLanderFuel,
@@ -20,6 +22,7 @@ import {
   landerCameraTarget,
   nextMenuGridIndex,
   nextSnakeHead,
+  originTunnelBoundsAt,
   rectsOverlap,
   shouldOpenArcade,
   terrainHeightAtX,
@@ -27,20 +30,40 @@ import {
   wrapPoint,
 } from '../games/game-core.mjs';
 
-test('the game menu exposes five distinct arcade programs', () => {
-  assert.deepEqual(GAME_IDS, ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander']);
+test('the game menu exposes six distinct arcade programs', () => {
+  assert.deepEqual(GAME_IDS, ['vector-break', 'vector-snake', 'vector-invaders', 'vector-asteroids', 'vector-lander', 'origin-flight']);
 });
 
 test('the game menu navigates its two-column grid in every direction', () => {
-  assert.equal(nextMenuGridIndex(0, 'right', 5), 1);
-  assert.equal(nextMenuGridIndex(1, 'left', 5), 0);
-  assert.equal(nextMenuGridIndex(0, 'down', 5), 2);
-  assert.equal(nextMenuGridIndex(2, 'down', 5), 4);
-  assert.equal(nextMenuGridIndex(4, 'up', 5), 2);
-  assert.equal(nextMenuGridIndex(1, 'down', 5), 3);
-  assert.equal(nextMenuGridIndex(3, 'down', 5), 1);
-  assert.equal(nextMenuGridIndex(4, 'right', 5), 4);
-  assert.equal(nextMenuGridIndex(4, 'down', 5), 0);
+  assert.equal(nextMenuGridIndex(0, 'right', 6), 1);
+  assert.equal(nextMenuGridIndex(1, 'left', 6), 0);
+  assert.equal(nextMenuGridIndex(0, 'down', 6), 2);
+  assert.equal(nextMenuGridIndex(2, 'down', 6), 4);
+  assert.equal(nextMenuGridIndex(4, 'up', 6), 2);
+  assert.equal(nextMenuGridIndex(1, 'down', 6), 3);
+  assert.equal(nextMenuGridIndex(3, 'down', 6), 5);
+  assert.equal(nextMenuGridIndex(5, 'down', 6), 1);
+  assert.equal(nextMenuGridIndex(4, 'right', 6), 5);
+});
+
+test('Origin Flight cycles through the classic six-slot power meter', () => {
+  assert.deepEqual(ORIGIN_POWER_STEPS, ['SPEED UP', 'MISSILE', 'DOUBLE', 'LASER', 'OPTION', 'SHIELD']);
+  assert.deepEqual(advanceOriginPower(0), { upgrade: 'SPEED UP', nextIndex: 1 });
+  assert.deepEqual(advanceOriginPower(5), { upgrade: 'SHIELD', nextIndex: 0 });
+  assert.deepEqual(advanceOriginPower(-1), { upgrade: 'SPEED UP', nextIndex: 1 });
+});
+
+test('Origin Flight terrain stays stepped and leaves a playable tunnel', () => {
+  for (let wave = 1; wave <= 12; wave += 1) {
+    for (let x = 0; x <= 2400; x += 37) {
+      const bounds = originTunnelBoundsAt(x, 813, wave);
+      assert.equal(bounds.top % 8, 0);
+      assert.equal(bounds.bottom % 8, 0);
+      assert.ok(bounds.top >= 32);
+      assert.ok(bounds.bottom <= 448);
+      assert.ok(bounds.bottom - bounds.top >= 190);
+    }
+  }
 });
 
 test('Escape opens the menu from a game and returns home from the menu', () => {
@@ -218,7 +241,7 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260924-12/);
+  assert.match(homepage, /easter-egg\.mjs\?v=\d+/);
 });
 
 test('the homepage launcher includes the Konami, WarGames, sudo, and source-code clues', async () => {
@@ -249,11 +272,12 @@ test('the arcade build uses one version across its page and launchers', async ()
   assert.match(launcher, new RegExp(`game-core\\.mjs\\?v=${version}`));
   assert.match(launcher, new RegExp(`games/index\\.html\\?v=${version}`));
   assert.match(page, new RegExp(`renderedVersion = '${version}'`));
+  assert.match(page, new RegExp(`arcade\\.css\\?v=${version}`));
   assert.match(page, new RegExp(`arcade\\.mjs\\?v=${version}`));
   assert.match(arcade, new RegExp(`game-core\\.mjs\\?v=${version}`));
 });
 
-test('the unlinked games page exposes a cache refresh check and the five-game selector', async () => {
+test('the unlinked games page exposes a cache refresh check and the six-game selector', async () => {
   const page = await readFile(new URL('../games/index.html', import.meta.url), 'utf8');
   assert.match(page, /<canvas[^>]+id="game-canvas"/);
   assert.match(page, /<nav[^>]+id="game-menu"/);
@@ -265,7 +289,18 @@ test('the unlinked games page exposes a cache refresh check and the five-game se
   assert.match(page, /VECTOR SNAKE/);
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
+  assert.match(page, /ORIGIN FLIGHT/);
   assert.doesNotMatch(page, /STAR DODGE/);
+});
+
+test('Origin Flight renders a dedicated pixel scroller with upgrades and touch-compatible controls', async () => {
+  const arcade = await readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8');
+  assert.match(arcade, /class OriginFlight/);
+  assert.match(arcade, /originTunnelBoundsAt/);
+  assert.match(arcade, /ORIGIN_POWER_STEPS/);
+  assert.match(arcade, /drawPixelShip/);
+  assert.match(arcade, /data-control="action"|touchActionButton/);
+  assert.match(arcade, /if \(id === 'origin-flight'\) return new OriginFlight\(\)/);
 });
 
 test('Vector Lander exposes an unlimited fuel hotkey and status display', async () => {

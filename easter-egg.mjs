@@ -4,7 +4,7 @@ import {
   appendTypedSecret,
   shouldOpenArcade,
   typedSecretAction,
-} from './games/game-core.mjs?v=20260924-12';
+} from './games/game-core.mjs?v=20260924-13';
 
 let konamiProgress = 0;
 let typedBuffer = '';
@@ -115,7 +115,7 @@ function showChoicePrompt(lines, { onYes, onNo }) {
 function openArcade(source = 'enter') {
   if (navigating) return;
   navigating = true;
-  window.location.assign(`games/index.html?v=20260924-12&source=${source}`);
+  window.location.assign(`games/index.html?v=20260924-13&source=${source}`);
 }
 
 window.addEventListener('keydown', (event) => {

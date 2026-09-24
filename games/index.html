@@ -6,14 +6,14 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="robots" content="noindex" />
     <title>Arcade Interrupt | Brian Birkinbine</title>
-    <meta name="description" content="A hidden monochrome arcade cabinet featuring VECTOR BREAK, VECTOR SNAKE, VECTOR INVADERS, VECTOR ASTEROIDS, and VECTOR LANDER." />
+    <meta name="description" content="A hidden arcade cabinet featuring five vector programs and the pixel-scrolling ORIGIN FLIGHT." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=VT323&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="arcade.css?v=20260923-1" />
+    <link rel="stylesheet" href="arcade.css?v=20260924-13" />
     <script>
       (() => {
-        const renderedVersion = '20260924-12';
+        const renderedVersion = '20260924-13';
         const versionUrl = new URL('version.json', window.location.href);
         versionUrl.searchParams.set('refresh', Date.now());
 
@@ -34,7 +34,7 @@
           .catch(() => {});
       })();
     </script>
-    <script type="module" src="arcade.mjs?v=20260924-12"></script>
+    <script type="module" src="arcade.mjs?v=20260924-13"></script>
   </head>
   <body>
     <main class="arcade-shell">
@@ -49,7 +49,7 @@
         </div>
       </header>
 
-      <section class="screen-frame" aria-label="Hidden vector arcade game">
+      <section class="screen-frame" aria-label="Hidden arcade game">
         <canvas id="game-canvas" width="800" height="480" tabindex="0">
           Your browser does not support the canvas element.
         </canvas>
@@ -76,6 +76,10 @@
             <button type="button" data-game-id="vector-lander">
               <strong>VECTOR LANDER</strong>
               <span>Six fuel-balanced mountain missions</span>
+            </button>
+            <button type="button" data-game-id="origin-flight">
+              <strong>ORIGIN FLIGHT</strong>
+              <span>Power up through the scrolling sector</span>
             </button>
           </div>
           <p class="menu-help">ARROWS / WASD TO CHOOSE &nbsp; ENTER / SPACE TO PLAY &nbsp; ESC TO RETURN HOME</p>

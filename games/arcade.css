@@ -29,6 +29,33 @@ body {
     var(--cabinet);
 }
 
+body.origin-game {
+  --cabinet: #00030c;
+  --screen: #000718;
+  --phosphor: #3cbcfc;
+  --bright: #f8f8d8;
+  --dim: #0878d8;
+  --line: #164b88;
+  --glass: rgba(60, 188, 252, 0.035);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(8, 120, 216, 0.17), transparent 58%),
+    var(--cabinet);
+}
+
+body.origin-game h1 {
+  text-shadow:
+    3px 0 0 rgba(216, 40, 0, 0.68),
+    0 0 16px rgba(60, 188, 252, 0.48);
+}
+
+body.origin-game .screen-frame {
+  border-left-color: #f07818;
+  box-shadow:
+    0 0 0 6px #001848,
+    0 0 0 7px #0878d8,
+    0 0 36px rgba(60, 188, 252, 0.2);
+}
+
 button,
 a {
   color: var(--phosphor);

@@ -16,8 +16,8 @@ A personal profile site with four dark, retro-computing visual styles.
 - Vector Field as the first-visit default, with the visitor's style-selector choice persisted locally
 - Responsive 96×105 halftone dot portrait derived from Brian's headshot without publishing the source photo
 - Accessible labels, reduced-motion and forced-color support, and a light print layout
-- Hidden monochrome vector arcade with a five-game selector at `/games/`, opened by pressing Enter on the homepage
-- Intentional phosphor glow retained inside the vector arcade
+- Hidden arcade with a six-game selector at `/games/`, opened by pressing Enter on the homepage
+- Five phosphor-vector games plus the original pixel-scrolling `ORIGIN FLIGHT` homage
 - Vector Lander with six fuel-balanced mountain and crater terrains, dynamic approach zoom, and an `F` hotkey for unlimited-fuel casual mode
 - No tracking, build system, or runtime dependencies
 

@@ -1,6 +1,8 @@
 import {
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  ORIGIN_POWER_STEPS,
+  advanceOriginPower,
   arcadeEscapeAction,
   burnLanderFuel,
   circleRectBounceAxis,
@@ -11,10 +13,11 @@ import {
   landerCameraTarget,
   nextMenuGridIndex,
   nextSnakeHead,
+  originTunnelBoundsAt,
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260924-12';
+} from './game-core.mjs?v=20260924-13';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -995,12 +998,374 @@ class VectorInvaders {
   }
 }
 
+class OriginFlight {
+  constructor() {
+    this.title = 'ORIGIN FLIGHT';
+    this.actionLabel = 'FIRE';
+    this.instructions = 'MOVE: ARROWS / WASD   FIRE: ENTER / SPACE   M / ESC: MENU';
+    this.score = 0;
+    this.lives = 3;
+    this.state = 'ready';
+    this.wave = 1;
+    this.kills = 0;
+    this.scroll = 0;
+    this.player = { x: 116, y: HEIGHT / 2, w: 34, h: 18 };
+    this.playerSpeed = 225;
+    this.shots = [];
+    this.enemies = [];
+    this.capsules = [];
+    this.sparks = [];
+    this.options = [];
+    this.powerIndex = 0;
+    this.hasMissile = false;
+    this.hasDouble = false;
+    this.hasLaser = false;
+    this.shield = 0;
+    this.cooldown = 0;
+    this.spawnTimer = 0.55;
+    this.invulnerable = 1.5;
+    this.lastUpgrade = '';
+    this.upgradeTimer = 0;
+    this.stars = Array.from({ length: 64 }, (_, index) => ({
+      x: (index * 137 + 29) % WIDTH,
+      y: 26 + ((index * 71 + 13) % (HEIGHT - 70)),
+      layer: index % 3,
+    }));
+  }
+
+  start() {
+    if (this.state === 'over') Object.assign(this, new OriginFlight());
+    this.state = 'playing';
+  }
+
+  action() {
+    if (this.state !== 'playing') {
+      this.start();
+      return;
+    }
+    this.fire();
+  }
+
+  fire() {
+    if (this.cooldown > 0 || this.shots.length > 28) return;
+    const emitters = [
+      { x: this.player.x + 20, y: this.player.y },
+      ...this.options.map((option) => ({ x: option.x + 6, y: option.y })),
+    ];
+    emitters.forEach((emitter) => {
+      this.shots.push({
+        x: emitter.x,
+        y: emitter.y - 2,
+        w: this.hasLaser ? 30 : 12,
+        h: this.hasLaser ? 4 : 3,
+        vx: this.hasLaser ? 620 : 510,
+        vy: 0,
+        damage: this.hasLaser ? 2 : 1,
+      });
+      if (this.hasDouble) {
+        this.shots.push({ x: emitter.x, y: emitter.y - 8, w: 9, h: 3, vx: 480, vy: -105, damage: 1 });
+      }
+      if (this.hasMissile) {
+        this.shots.push({ x: emitter.x - 4, y: emitter.y + 7, w: 8, h: 5, vx: 300, vy: 155, damage: 2 });
+      }
+    });
+    this.cooldown = this.hasLaser ? 0.16 : 0.2;
+  }
+
+  spawnEnemy() {
+    const x = WIDTH + 38;
+    const tunnel = originTunnelBoundsAt(x, this.scroll, this.wave);
+    const margin = 34;
+    const available = Math.max(1, tunnel.bottom - tunnel.top - margin * 2);
+    const formation = this.kills % 5;
+    const y = tunnel.top + margin + ((this.kills * 83 + this.wave * 47) % available);
+    this.enemies.push({
+      x,
+      y,
+      baseY: y,
+      w: formation === 4 ? 34 : 26,
+      h: formation === 4 ? 22 : 16,
+      vx: -(135 + this.wave * 9 + formation * 7),
+      amplitude: formation % 2 ? 25 : 10,
+      phase: formation * 1.15,
+      age: 0,
+      hp: formation === 4 ? 3 : 1,
+      elite: formation === 4,
+      dead: false,
+    });
+  }
+
+  collectPower() {
+    const { upgrade, nextIndex } = advanceOriginPower(this.powerIndex);
+    this.powerIndex = nextIndex;
+    this.lastUpgrade = upgrade;
+    this.upgradeTimer = 2.2;
+    this.score += 250;
+    if (upgrade === 'SPEED UP') this.playerSpeed = Math.min(350, this.playerSpeed + 45);
+    if (upgrade === 'MISSILE') this.hasMissile = true;
+    if (upgrade === 'DOUBLE') this.hasDouble = true;
+    if (upgrade === 'LASER') this.hasLaser = true;
+    if (upgrade === 'OPTION' && this.options.length < 2) {
+      this.options.push({ x: this.player.x - 26 - this.options.length * 24, y: this.player.y });
+    }
+    if (upgrade === 'SHIELD') this.shield = 1;
+  }
+
+  burst(x, y, color = '#f07818', count = 8) {
+    for (let index = 0; index < count; index += 1) {
+      const angle = (index / count) * Math.PI * 2;
+      const speed = 35 + (index % 3) * 22;
+      this.sparks.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, ttl: 0.5, color });
+    }
+  }
+
+  damagePlayer() {
+    if (this.invulnerable > 0 || this.state !== 'playing') return;
+    this.burst(this.player.x, this.player.y, '#f8f8d8', 14);
+    if (this.shield > 0) {
+      this.shield = 0;
+      this.invulnerable = 1.8;
+      return;
+    }
+    this.lives -= 1;
+    if (this.lives <= 0) {
+      this.state = 'over';
+      return;
+    }
+    this.player.x = 116;
+    this.player.y = HEIGHT / 2;
+    this.invulnerable = 2.4;
+  }
+
+  update(dt) {
+    this.cooldown = Math.max(0, this.cooldown - dt);
+    this.invulnerable = Math.max(0, this.invulnerable - dt);
+    this.upgradeTimer = Math.max(0, this.upgradeTimer - dt);
+    if (this.state !== 'playing') return;
+
+    const horizontal = (keys.has('ArrowRight') || keys.has('KeyD') ? 1 : 0)
+      - (keys.has('ArrowLeft') || keys.has('KeyA') ? 1 : 0);
+    const vertical = (keys.has('ArrowDown') || keys.has('KeyS') ? 1 : 0)
+      - (keys.has('ArrowUp') || keys.has('KeyW') ? 1 : 0);
+    const length = Math.hypot(horizontal, vertical) || 1;
+    this.player.x += (horizontal / length) * this.playerSpeed * dt;
+    this.player.y += (vertical / length) * this.playerSpeed * dt;
+    this.player.x = Math.max(40, Math.min(WIDTH - 90, this.player.x));
+    this.player.y = Math.max(28, Math.min(HEIGHT - 36, this.player.y));
+
+    this.scroll += (92 + this.wave * 5) * dt;
+    this.spawnTimer -= dt;
+    if (this.spawnTimer <= 0) {
+      this.spawnEnemy();
+      this.spawnTimer = Math.max(0.28, 0.82 - this.wave * 0.045);
+    }
+
+    this.options.forEach((option, index) => {
+      const targetX = this.player.x - 34 - index * 30;
+      const targetY = this.player.y + (index % 2 ? 14 : -14);
+      const blend = 1 - Math.exp(-5.5 * dt);
+      option.x += (targetX - option.x) * blend;
+      option.y += (targetY - option.y) * blend;
+    });
+
+    this.shots.forEach((shot) => {
+      shot.x += shot.vx * dt;
+      shot.y += shot.vy * dt;
+    });
+    this.enemies.forEach((enemy) => {
+      enemy.age += dt;
+      enemy.x += enemy.vx * dt;
+      enemy.y = enemy.baseY + Math.sin(enemy.age * 3.1 + enemy.phase) * enemy.amplitude;
+    });
+    this.capsules.forEach((capsule) => { capsule.x -= (110 + this.wave * 4) * dt; });
+    this.sparks.forEach((spark) => {
+      spark.x += spark.vx * dt;
+      spark.y += spark.vy * dt;
+      spark.ttl -= dt;
+    });
+
+    for (const shot of this.shots) {
+      if (shot.dead) continue;
+      const enemy = this.enemies.find((candidate) => !candidate.dead && rectsOverlap(shot, {
+        x: candidate.x - candidate.w / 2,
+        y: candidate.y - candidate.h / 2,
+        w: candidate.w,
+        h: candidate.h,
+      }));
+      if (!enemy) continue;
+      shot.dead = true;
+      enemy.hp -= shot.damage;
+      if (enemy.hp > 0) continue;
+      enemy.dead = true;
+      this.kills += 1;
+      this.score += enemy.elite ? 450 : 125;
+      this.burst(enemy.x, enemy.y, enemy.elite ? '#f8f8d8' : '#f07818', enemy.elite ? 13 : 7);
+      if (this.kills % 4 === 0) this.capsules.push({ x: enemy.x, y: enemy.y, w: 16, h: 16 });
+      if (this.kills % 15 === 0) this.wave += 1;
+    }
+
+    const playerBox = {
+      x: this.player.x - this.player.w / 2,
+      y: this.player.y - this.player.h / 2,
+      w: this.player.w,
+      h: this.player.h,
+    };
+    const tunnel = originTunnelBoundsAt(this.player.x, this.scroll, this.wave);
+    if (playerBox.y < tunnel.top || playerBox.y + playerBox.h > tunnel.bottom) this.damagePlayer();
+    const enemyHit = this.enemies.find((enemy) => !enemy.dead && rectsOverlap(playerBox, {
+      x: enemy.x - enemy.w / 2,
+      y: enemy.y - enemy.h / 2,
+      w: enemy.w,
+      h: enemy.h,
+    }));
+    if (enemyHit) {
+      enemyHit.dead = true;
+      this.damagePlayer();
+    }
+    for (const capsule of this.capsules) {
+      if (!capsule.dead && rectsOverlap(playerBox, capsule)) {
+        capsule.dead = true;
+        this.collectPower();
+      }
+    }
+
+    this.shots = this.shots.filter((shot) => !shot.dead && shot.x < WIDTH + 50 && shot.y > -20 && shot.y < HEIGHT + 20);
+    this.enemies = this.enemies.filter((enemy) => !enemy.dead && enemy.x > -60);
+    this.capsules = this.capsules.filter((capsule) => !capsule.dead && capsule.x > -30);
+    this.sparks = this.sparks.filter((spark) => spark.ttl > 0);
+  }
+
+  drawPixelShip(x, y, scale = 1) {
+    if (this.invulnerable > 0 && Math.floor(this.invulnerable * 10) % 2) return;
+    ctx.save();
+    ctx.translate(Math.round(x), Math.round(y));
+    ctx.scale(scale, scale);
+    const pixels = [
+      [-18, -3, 7, 6, '#d82800'], [-12, -6, 10, 12, '#f07818'],
+      [-5, -9, 12, 18, '#f8f8d8'], [1, -12, 10, 5, '#3cbcfc'],
+      [1, 7, 10, 5, '#3cbcfc'], [6, -7, 13, 14, '#0878d8'],
+      [17, -4, 13, 8, '#f8f8d8'], [29, -2, 10, 4, '#3cbcfc'],
+      [38, -1, 6, 2, '#f8f8d8'], [9, -4, 6, 4, '#001848'],
+    ];
+    pixels.forEach(([px, py, w, h, color]) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(px, py, w, h);
+    });
+    ctx.restore();
+  }
+
+  drawEnemy(enemy) {
+    ctx.save();
+    ctx.translate(Math.round(enemy.x), Math.round(enemy.y));
+    ctx.fillStyle = enemy.elite ? '#f8f8d8' : '#3cbcfc';
+    ctx.fillRect(-enemy.w / 2, -4, enemy.w, 8);
+    ctx.fillStyle = enemy.elite ? '#d82800' : '#0878d8';
+    ctx.fillRect(-enemy.w / 2 + 5, -enemy.h / 2, enemy.w - 10, enemy.h);
+    ctx.fillStyle = '#f07818';
+    ctx.fillRect(-enemy.w / 2 - 5, -2, 6, 4);
+    ctx.fillStyle = '#001848';
+    ctx.fillRect(4, -3, 5, 6);
+    ctx.restore();
+  }
+
+  drawTerrain() {
+    ctx.fillStyle = '#0878d8';
+    for (let x = -8; x < WIDTH + 8; x += 8) {
+      const { top, bottom } = originTunnelBoundsAt(x, this.scroll, this.wave);
+      ctx.fillRect(x, 0, 9, top);
+      ctx.fillRect(x, bottom, 9, HEIGHT - bottom);
+      ctx.fillStyle = '#3cbcfc';
+      ctx.fillRect(x, top - 4, 9, 4);
+      ctx.fillRect(x, bottom, 9, 4);
+      ctx.fillStyle = '#0878d8';
+    }
+  }
+
+  drawPowerMeter() {
+    const slotWidth = 78;
+    const totalWidth = slotWidth * ORIGIN_POWER_STEPS.length;
+    const startX = (WIDTH - totalWidth) / 2;
+    ORIGIN_POWER_STEPS.forEach((label, index) => {
+      const active = index === this.powerIndex;
+      ctx.fillStyle = active ? '#f07818' : 'rgba(0, 7, 24, 0.88)';
+      ctx.fillRect(startX + index * slotWidth, HEIGHT - 25, slotWidth - 3, 19);
+      ctx.strokeStyle = active ? '#f8f8d8' : '#0878d8';
+      ctx.strokeRect(startX + index * slotWidth + 0.5, HEIGHT - 24.5, slotWidth - 4, 18);
+      ctx.fillStyle = active ? '#001848' : '#3cbcfc';
+      ctx.font = '12px "VT323", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, startX + index * slotWidth + (slotWidth - 3) / 2, HEIGHT - 15);
+    });
+  }
+
+  drawOverlay(title, subtitle) {
+    ctx.fillStyle = 'rgba(0, 7, 24, 0.9)';
+    ctx.fillRect(120, 165, 560, 145);
+    ctx.strokeStyle = '#3cbcfc';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(120, 165, 560, 145);
+    vectorText(title, WIDTH / 2, 214, 46, 'center', '#f8f8d8');
+    vectorText(subtitle, WIDTH / 2, 266, 21, 'center', '#f07818');
+  }
+
+  draw() {
+    ctx.fillStyle = '#000718';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    this.stars.forEach((star) => {
+      const speed = 0.25 + star.layer * 0.22;
+      const x = ((star.x - this.scroll * speed) % WIDTH + WIDTH) % WIDTH;
+      ctx.fillStyle = star.layer === 2 ? '#f8f8d8' : star.layer === 1 ? '#3cbcfc' : '#0878d8';
+      ctx.fillRect(Math.round(x), star.y, star.layer + 1, star.layer + 1);
+    });
+    this.drawTerrain();
+    this.capsules.forEach((capsule) => {
+      ctx.fillStyle = '#f07818';
+      ctx.fillRect(Math.round(capsule.x), Math.round(capsule.y), 16, 16);
+      ctx.fillStyle = '#f8f8d8';
+      ctx.fillRect(Math.round(capsule.x) + 4, Math.round(capsule.y) + 4, 8, 8);
+      ctx.fillStyle = '#0878d8';
+      ctx.fillRect(Math.round(capsule.x) + 6, Math.round(capsule.y) + 6, 4, 4);
+    });
+    this.enemies.forEach((enemy) => this.drawEnemy(enemy));
+    this.shots.forEach((shot) => {
+      ctx.fillStyle = shot.damage > 1 ? '#f8f8d8' : '#f07818';
+      ctx.fillRect(Math.round(shot.x), Math.round(shot.y), shot.w, shot.h);
+    });
+    this.sparks.forEach((spark) => {
+      ctx.globalAlpha = Math.min(1, spark.ttl * 2);
+      ctx.fillStyle = spark.color;
+      ctx.fillRect(Math.round(spark.x), Math.round(spark.y), 4, 4);
+    });
+    ctx.globalAlpha = 1;
+    this.options.forEach((option) => {
+      ctx.fillStyle = '#f07818';
+      ctx.fillRect(Math.round(option.x) - 6, Math.round(option.y) - 6, 12, 12);
+      ctx.fillStyle = '#f8f8d8';
+      ctx.fillRect(Math.round(option.x) - 2, Math.round(option.y) - 2, 4, 4);
+    });
+    this.drawPixelShip(this.player.x, this.player.y);
+    if (this.shield > 0) {
+      ctx.strokeStyle = '#3cbcfc';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(this.player.x - 27, this.player.y - 19, 58, 38);
+    }
+    vectorText(`STAGE ${String(this.wave).padStart(2, '0')}`, 18, 20, 18, 'left', '#3cbcfc');
+    vectorText(`CAPSULES ${String(this.kills).padStart(3, '0')}`, WIDTH - 18, 20, 18, 'right', '#3cbcfc');
+    this.drawPowerMeter();
+    if (this.upgradeTimer > 0) vectorText(this.lastUpgrade, WIDTH / 2, 54, 24, 'center', '#f07818');
+    if (this.state === 'ready') this.drawOverlay('ORIGIN FLIGHT', 'ENTER / SPACE TO LAUNCH');
+    if (this.state === 'over') this.drawOverlay('SHIP DESTROYED', 'ENTER / SPACE TO REBUILD');
+  }
+}
+
 function createGame(id) {
   if (id === 'vector-break') return new VectorBreak();
   if (id === 'vector-invaders') return new VectorInvaders();
   if (id === 'vector-asteroids') return new VectorAsteroids();
   if (id === 'vector-snake') return new VectorSnake();
   if (id === 'vector-lander') return new VectorLander();
+  if (id === 'origin-flight') return new OriginFlight();
   return null;
 }
 
@@ -1014,6 +1379,7 @@ function drawMenuBackdrop() {
 function showMenu() {
   keys.clear();
   currentGame = null;
+  document.body.classList.remove('origin-game');
   document.body.classList.add('menu-open');
   gameMenu.hidden = false;
   gameMenuButton.hidden = true;
@@ -1029,6 +1395,7 @@ function loadGame(id) {
   const nextGame = createGame(id);
   if (!nextGame) return;
   currentGame = nextGame;
+  document.body.classList.toggle('origin-game', id === 'origin-flight');
   document.body.classList.remove('menu-open');
   gameButtons.forEach((button) => {
     if (button.dataset.gameId === id) button.setAttribute('aria-current', 'true');
