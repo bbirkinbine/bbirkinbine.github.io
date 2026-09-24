@@ -292,6 +292,7 @@ test('the unlinked games page exposes a cache refresh check and the six-game sel
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
   assert.match(page, /ORIGIN FLIGHT/);
+  assert.match(page, /\[KONAMI CODE EXCLUSIVE\]/);
   assert.match(page, /data-game-id="origin-flight" hidden/);
   assert.doesNotMatch(page, /STAR DODGE/);
 });

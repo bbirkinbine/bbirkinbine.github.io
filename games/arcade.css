@@ -211,9 +211,26 @@ canvas {
   line-height: 1;
 }
 
+.game-list .exclusive-tag {
+  display: inline;
+  margin-left: 0.45rem;
+  color: #f07818;
+  font-family: "IBM Plex Mono", "Lucida Console", monospace;
+  font-size: 0.38em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .game-list button:hover strong,
 .game-list button:focus-visible strong {
   color: #001405;
+}
+
+.game-list button:hover .exclusive-tag,
+.game-list button:focus-visible .exclusive-tag {
+  color: #7c2400;
 }
 
 .game-list span {
@@ -329,6 +346,12 @@ canvas {
 
   .game-list span {
     display: none;
+  }
+
+  .game-list .exclusive-tag {
+    display: block;
+    margin: 0.15rem 0 0;
+    font-size: 0.4em;
   }
 
   .menu-help {

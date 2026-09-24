@@ -10,10 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=VT323&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="arcade.css?v=20260924-14" />
+    <link rel="stylesheet" href="arcade.css?v=20260924-15" />
     <script>
       (() => {
-        const renderedVersion = '20260924-14';
+        const renderedVersion = '20260924-15';
         const versionUrl = new URL('version.json', window.location.href);
         versionUrl.searchParams.set('refresh', Date.now());
 
@@ -34,7 +34,7 @@
           .catch(() => {});
       })();
     </script>
-    <script type="module" src="arcade.mjs?v=20260924-14"></script>
+    <script type="module" src="arcade.mjs?v=20260924-15"></script>
   </head>
   <body>
     <main class="arcade-shell">
@@ -78,7 +78,7 @@
               <span>Six fuel-balanced mountain missions</span>
             </button>
             <button type="button" data-game-id="origin-flight" hidden>
-              <strong>ORIGIN FLIGHT</strong>
+              <strong>ORIGIN FLIGHT <small class="exclusive-tag">[KONAMI CODE EXCLUSIVE]</small></strong>
               <span>Power up through the scrolling sector</span>
             </button>
           </div>

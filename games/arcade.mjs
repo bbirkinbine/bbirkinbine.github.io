@@ -17,7 +17,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260924-14';
+} from './game-core.mjs?v=20260924-15';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
