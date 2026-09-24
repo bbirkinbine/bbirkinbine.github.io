@@ -65,6 +65,32 @@ test('the homepage exposes an accessible responsive halftone portrait', async ()
   assert.doesNotMatch(portrait, /\.(?:jpe?g|png|webp)/i);
 });
 
+test('the homepage is a focused calling card without an empty Work section', async () => {
+  const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+
+  assert.match(homepage, /<p class="profile-intro">/);
+  assert.match(homepage, /I work in cybersecurity\. My current obsession is building local AI systems and agent workflows\./);
+  assert.match(homepage, /20\+ years in product security, security architecture, and offensive assessment\./);
+  assert.doesNotMatch(homepage, /class="work-card"|id="work-title"/);
+  assert.match(styles, /\.profile-intro\s*\{/);
+  assert.match(styles, /grid-area:\s*intro/);
+  assert.doesNotMatch(styles, /\.work-card/);
+});
+
+test('public pages declare the shared SVG favicon', async () => {
+  const pages = await Promise.all([
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../privacy.html', import.meta.url), 'utf8'),
+    readFile(new URL('../terms.html', import.meta.url), 'utf8'),
+    readFile(new URL('../games/index.html', import.meta.url), 'utf8'),
+  ]);
+
+  for (const page of pages) {
+    assert.match(page, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml" \/>/);
+  }
+});
+
 test('the site exposes four persistent dark-only visual styles', async () => {
   const [homepage, privacy, terms, styles, themeScript] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),

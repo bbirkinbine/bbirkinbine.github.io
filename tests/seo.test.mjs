@@ -8,11 +8,11 @@ test('homepage publishes canonical search and social metadata without visible co
   const homepage = await read('../index.html');
   const head = homepage.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? '';
 
-  assert.match(head, /<title>Brian Birkinbine \| Cybersecurity &amp; Security Architecture<\/title>/);
-  assert.match(head, /<meta name="description" content="Brian Birkinbine is a senior cybersecurity practitioner focused on product security, security architecture, offensive assessment, and AI-assisted engineering\." \/>/);
+  assert.match(head, /<title>Brian Birkinbine \| AI Systems, Agents &amp; Cybersecurity<\/title>/);
+  assert.match(head, /<meta name="description" content="Brian Birkinbine works in cybersecurity and is currently focused on building local AI systems and agent workflows, informed by 20\+ years in product security, security architecture, and offensive assessment\." \/>/);
   assert.match(head, /<link rel="canonical" href="https:\/\/brianbirkinbine\.com\/" \/>/);
   assert.match(head, /<meta property="og:url" content="https:\/\/brianbirkinbine\.com\/" \/>/);
-  assert.match(head, /<meta property="og:title" content="Brian Birkinbine \| Cybersecurity &amp; Security Architecture" \/>/);
+  assert.match(head, /<meta property="og:title" content="Brian Birkinbine \| AI Systems, Agents &amp; Cybersecurity" \/>/);
   assert.match(head, /<meta name="twitter:card" content="summary" \/>/);
 });
 
@@ -32,6 +32,8 @@ test('homepage identifies Brian and his public profiles with valid JSON-LD', asy
   assert.equal(profile.mainEntity['@id'], 'https://brianbirkinbine.com/#person');
   assert.equal(person.name, 'Brian Birkinbine');
   assert.equal(person.url, 'https://brianbirkinbine.com/');
+  assert.equal(person.jobTitle, 'Senior Cybersecurity Practitioner');
+  assert.match(person.description, /^Works in cybersecurity and is currently focused on building local AI systems and agent workflows/);
   assert.deepEqual(person.sameAs, [
     'https://github.com/bbirkinbine',
     'https://www.linkedin.com/in/brianbirkinbine/',
