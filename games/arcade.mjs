@@ -17,7 +17,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260924-13';
+} from './game-core.mjs?v=20260924-14';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -28,7 +28,16 @@ const instructionsEl = document.querySelector('#instructions');
 const hudEl = document.querySelector('.hud');
 const gameMenu = document.querySelector('#game-menu');
 const gameMenuButton = document.querySelector('#game-menu-button');
-const gameButtons = [...document.querySelectorAll('[data-game-id]')];
+const allGameButtons = [...document.querySelectorAll('[data-game-id]')];
+let originFlightUnlocked = false;
+try {
+  originFlightUnlocked = window.localStorage.getItem('bb-origin-code-unlocked') === '1';
+} catch {
+  originFlightUnlocked = false;
+}
+const originFlightButton = allGameButtons.find((button) => button.dataset.gameId === 'origin-flight');
+if (originFlightButton) originFlightButton.hidden = !originFlightUnlocked;
+const gameButtons = allGameButtons.filter((button) => !button.hidden);
 const touchActionButton = document.querySelector('[data-control="action"]');
 
 const WIDTH = canvas.width;

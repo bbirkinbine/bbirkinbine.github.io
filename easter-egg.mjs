@@ -4,7 +4,7 @@ import {
   appendTypedSecret,
   shouldOpenArcade,
   typedSecretAction,
-} from './games/game-core.mjs?v=20260924-13';
+} from './games/game-core.mjs?v=20260924-14';
 
 let konamiProgress = 0;
 let typedBuffer = '';
@@ -94,7 +94,12 @@ function showChoicePrompt(lines, { onYes, onNo }) {
     if (event.target === message) answer(false);
   });
   message.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'y') {
+    if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
+      event.preventDefault();
+      event.stopPropagation();
+      const nextChoice = ['ArrowLeft', 'ArrowUp'].includes(event.key) ? yesButton : noButton;
+      nextChoice.focus({ preventScroll: true });
+    } else if (event.key.toLowerCase() === 'y') {
       event.preventDefault();
       event.stopPropagation();
       answer(true);
@@ -115,7 +120,7 @@ function showChoicePrompt(lines, { onYes, onNo }) {
 function openArcade(source = 'enter') {
   if (navigating) return;
   navigating = true;
-  window.location.assign(`games/index.html?v=20260924-13&source=${source}`);
+  window.location.assign(`games/index.html?v=20260924-14&source=${source}`);
 }
 
 window.addEventListener('keydown', (event) => {

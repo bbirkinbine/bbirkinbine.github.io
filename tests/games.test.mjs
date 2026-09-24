@@ -255,6 +255,8 @@ test('the homepage launcher includes the Konami, WarGames, sudo, and source-code
   assert.match(launcher, /dataset\.choice = 'no'/);
   assert.match(launcher, /event\.key\.toLowerCase\(\) === 'y'/);
   assert.match(launcher, /event\.key\.toLowerCase\(\) === 'n'/);
+  assert.match(launcher, /\['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'\]/);
+  assert.match(launcher, /nextChoice\.focus\(\{ preventScroll: true \}\)/);
   assert.match(launcher, /duration = 5000/);
   assert.match(launcher, /visitor is not in the sudoers file\./);
   assert.match(launcher, /openArcade\('joshua'\)/);
@@ -290,6 +292,7 @@ test('the unlinked games page exposes a cache refresh check and the six-game sel
   assert.match(page, /VECTOR INVADERS/);
   assert.match(page, /VECTOR ASTEROIDS/);
   assert.match(page, /ORIGIN FLIGHT/);
+  assert.match(page, /data-game-id="origin-flight" hidden/);
   assert.doesNotMatch(page, /STAR DODGE/);
 });
 
@@ -299,6 +302,8 @@ test('Origin Flight renders a dedicated pixel scroller with upgrades and touch-c
   assert.match(arcade, /originTunnelBoundsAt/);
   assert.match(arcade, /ORIGIN_POWER_STEPS/);
   assert.match(arcade, /drawPixelShip/);
+  assert.match(arcade, /localStorage\.getItem\('bb-origin-code-unlocked'\) === '1'/);
+  assert.match(arcade, /originFlightButton\.hidden = !originFlightUnlocked/);
   assert.match(arcade, /data-control="action"|touchActionButton/);
   assert.match(arcade, /if \(id === 'origin-flight'\) return new OriginFlight\(\)/);
 });
