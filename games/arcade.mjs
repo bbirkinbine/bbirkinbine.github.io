@@ -14,7 +14,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260923-10';
+} from './game-core.mjs?v=20260924-11';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -1069,7 +1069,7 @@ window.addEventListener('keydown', (event) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(event.code)) event.preventDefault();
   if (event.code === 'Escape') {
     event.preventDefault();
-    if (arcadeEscapeAction(!gameMenu.hidden) === 'home') window.location.assign('/');
+    if (arcadeEscapeAction(!gameMenu.hidden) === 'home') window.location.assign('../index.html');
     else showMenu();
     return;
   }

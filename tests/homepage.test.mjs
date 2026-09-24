@@ -3,13 +3,16 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 
-const runThemeScript = (themeScript, { savedStyle = null } = {}) => {
+const runThemeScript = (themeScript, { savedStyle = null, originUnlocked = false } = {}) => {
   const documentListeners = {};
   const toggleListeners = {};
   const attributes = {};
   const writes = [];
   const toggleState = { blurCount: 0 };
   const root = { dataset: {} };
+  const storage = new Map();
+  if (savedStyle) storage.set('bb-style', savedStyle);
+  if (originUnlocked) storage.set('bb-origin-code-unlocked', '1');
   const toggle = {
     addEventListener(type, listener) {
       toggleListeners[type] = listener;
@@ -33,17 +36,18 @@ const runThemeScript = (themeScript, { savedStyle = null } = {}) => {
       },
     },
     localStorage: {
-      getItem() {
-        return savedStyle;
+      getItem(key) {
+        return storage.get(key) ?? null;
       },
       setItem(key, value) {
+        storage.set(key, value);
         writes.push([key, value]);
       },
     },
   };
 
   runInNewContext(themeScript, context);
-  return { attributes, documentListeners, root, toggleListeners, toggleState, writes };
+  return { attributes, documentListeners, root, storage, toggleListeners, toggleState, writes };
 };
 
 test('the homepage exposes an accessible responsive halftone portrait', async () => {
@@ -91,7 +95,7 @@ test('public pages declare the shared SVG favicon', async () => {
   }
 });
 
-test('the site exposes four persistent dark-only visual styles', async () => {
+test('the site exposes four standard styles and a persistent hidden Origin Code style', async () => {
   const [homepage, privacy, terms, styles, themeScript] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../privacy.html', import.meta.url), 'utf8'),
@@ -105,19 +109,50 @@ test('the site exposes four persistent dark-only visual styles', async () => {
     assert.doesNotMatch(page, /class="theme-toggle"/);
   }
 
-  for (const style of ['terminal', 'arcade-night', 'vector-field', 'red-grid']) {
+  for (const style of ['terminal', 'arcade-night', 'vector-field', 'red-grid', 'origin-code']) {
     assert.match(themeScript, new RegExp(`["']${style}["']`));
     assert.match(styles, new RegExp(`data-style="${style}"`));
   }
 
   assert.match(themeScript, /bb-style/);
-  assert.equal(themeScript.match(/localStorage\.setItem/g)?.length, 1);
+  assert.match(themeScript, /bb-origin-code-unlocked/);
   assert.match(themeScript, /findStyle\("vector-field"\)/);
   assert.doesNotMatch(themeScript, /randomStyle/);
   assert.match(styles, /color-scheme:\s*dark/);
   assert.doesNotMatch(styles, /prefers-color-scheme/);
   assert.match(styles, /@media \(forced-colors: active\)/);
   assert.match(styles, /@media print/);
+});
+
+test('the Konami event unlocks Origin Code and keeps it in later selector cycles', async () => {
+  const themeScript = await readFile(new URL('../theme.js', import.meta.url), 'utf8');
+  const firstUnlock = runThemeScript(themeScript);
+  firstUnlock.documentListeners.DOMContentLoaded();
+  firstUnlock.documentListeners['bb:unlock-origin-code']();
+
+  assert.equal(firstUnlock.root.dataset.style, 'origin-code');
+  assert.deepEqual(firstUnlock.writes, [
+    ['bb-origin-code-unlocked', '1'],
+    ['bb-style', 'origin-code'],
+  ]);
+  assert.equal(
+    firstUnlock.attributes['aria-label'],
+    'Switch visual style. Current: Origin Code. Next: Terminal',
+  );
+
+  const reload = runThemeScript(themeScript, {
+    savedStyle: 'origin-code',
+    originUnlocked: true,
+  });
+  assert.equal(reload.root.dataset.style, 'origin-code');
+
+  const unlockedRedGrid = runThemeScript(themeScript, {
+    savedStyle: 'red-grid',
+    originUnlocked: true,
+  });
+  unlockedRedGrid.documentListeners.DOMContentLoaded();
+  unlockedRedGrid.toggleListeners.click({ detail: 1 });
+  assert.equal(unlockedRedGrid.root.dataset.style, 'origin-code');
 });
 
 test('Vector Field is the default until the visitor uses the selector', async () => {

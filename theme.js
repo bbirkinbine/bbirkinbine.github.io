@@ -1,25 +1,50 @@
 (() => {
   const storageKey = "bb-style";
+  const originUnlockKey = "bb-origin-code-unlocked";
   const root = document.documentElement;
-  const styles = [
+  const standardStyles = [
     { id: "terminal", label: "Terminal" },
     { id: "arcade-night", label: "Arcade Night" },
     { id: "vector-field", label: "Vector Field" },
     { id: "red-grid", label: "Red Grid City" },
   ];
+  const originStyle = { id: "origin-code", label: "Origin Code" };
+  let styles = [...standardStyles];
+  let savedStyleId;
+  let originUnlocked = false;
+  let updateLabels = () => {};
 
   const findStyle = (id) => styles.find((style) => style.id === id);
 
-  let selectedStyle;
   try {
-    selectedStyle = findStyle(localStorage.getItem(storageKey));
+    savedStyleId = localStorage.getItem(storageKey);
+    originUnlocked = localStorage.getItem(originUnlockKey) === "1"
+      || savedStyleId === originStyle.id;
   } catch {
     // The default style still works when storage is unavailable.
   }
 
+  if (originUnlocked) styles = [...standardStyles, originStyle];
+
+  let selectedStyle = findStyle(savedStyleId);
+
   if (!selectedStyle) selectedStyle = findStyle("vector-field");
 
   root.dataset.style = selectedStyle.id;
+
+  document.addEventListener("bb:unlock-origin-code", () => {
+    if (!findStyle(originStyle.id)) styles = [...standardStyles, originStyle];
+    root.dataset.style = originStyle.id;
+
+    try {
+      localStorage.setItem(originUnlockKey, "1");
+      localStorage.setItem(storageKey, originStyle.id);
+    } catch {
+      // The unlocked style remains active for this page view.
+    }
+
+    updateLabels();
+  });
 
   document.addEventListener("DOMContentLoaded", () => {
     const toggles = document.querySelectorAll(".style-toggle");
@@ -29,7 +54,7 @@
       return index === -1 ? 0 : index;
     };
 
-    const updateLabels = () => {
+    updateLabels = () => {
       const current = styles[currentIndex()];
       const next = styles[(currentIndex() + 1) % styles.length];
 

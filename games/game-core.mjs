@@ -325,6 +325,38 @@ export function shouldOpenArcade(event, interactiveTarget = false) {
     && !interactiveTarget;
 }
 
+export const KONAMI_SEQUENCE = Object.freeze([
+  'ArrowUp',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowRight',
+  'KeyB',
+  'KeyA',
+]);
+
+export function advanceSequenceProgress(sequence, progress, input) {
+  if (!Array.isArray(sequence) || sequence.length === 0) return 0;
+  if (input === sequence[progress]) return progress + 1;
+  return input === sequence[0] ? 1 : 0;
+}
+
+export function appendTypedSecret(buffer, key, maxLength = 12) {
+  if (typeof key !== 'string' || key.length !== 1 || !/[a-z]/i.test(key)) {
+    return buffer;
+  }
+  return `${buffer}${key.toLowerCase()}`.slice(-maxLength);
+}
+
+export function typedSecretAction(buffer) {
+  if (buffer.endsWith('joshua')) return 'wargames';
+  if (buffer.endsWith('sudo')) return 'sudo';
+  return null;
+}
+
 export function circleRectHit(circle, rect) {
   const nearestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.w));
   const nearestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.h));

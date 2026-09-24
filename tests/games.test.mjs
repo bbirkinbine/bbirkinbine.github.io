@@ -4,8 +4,11 @@ import { readFile } from 'node:fs/promises';
 
 import {
   GAME_IDS,
+  KONAMI_SEQUENCE,
   VECTOR_BREAK_LEVELS,
   VECTOR_LANDER_MISSIONS,
+  advanceSequenceProgress,
+  appendTypedSecret,
   arcadeEscapeAction,
   burnLanderFuel,
   circleRectBounceAxis,
@@ -20,6 +23,7 @@ import {
   rectsOverlap,
   shouldOpenArcade,
   terrainHeightAtX,
+  typedSecretAction,
   wrapPoint,
 } from '../games/game-core.mjs';
 
@@ -161,6 +165,29 @@ test('shouldOpenArcade accepts a plain non-repeating Enter press only', () => {
   assert.equal(shouldOpenArcade(enter, true), false);
 });
 
+test('the Konami sequence progresses, recovers, and completes deterministically', () => {
+  let progress = 0;
+  KONAMI_SEQUENCE.forEach((code) => {
+    progress = advanceSequenceProgress(KONAMI_SEQUENCE, progress, code);
+  });
+  assert.equal(progress, KONAMI_SEQUENCE.length);
+  assert.equal(advanceSequenceProgress(KONAMI_SEQUENCE, 5, 'Escape'), 0);
+  assert.equal(advanceSequenceProgress(KONAMI_SEQUENCE, 5, 'ArrowUp'), 1);
+});
+
+test('typed Easter-egg commands recognize JOSHUA and sudo without capturing punctuation', () => {
+  let buffer = '';
+  for (const key of ['J', 'o', 's', 'h', 'u', 'a']) buffer = appendTypedSecret(buffer, key);
+  assert.equal(buffer, 'joshua');
+  assert.equal(typedSecretAction(buffer), 'wargames');
+
+  buffer = '';
+  for (const key of ['s', 'u', '-', 'd', 'o']) buffer = appendTypedSecret(buffer, key);
+  assert.equal(buffer, 'sudo');
+  assert.equal(typedSecretAction(buffer), 'sudo');
+  assert.equal(typedSecretAction('ordinary'), null);
+});
+
 test('circleRectHit detects contact and rejects a clear miss', () => {
   assert.equal(circleRectHit({ x: 10, y: 10, r: 3 }, { x: 12, y: 8, w: 10, h: 6 }), true);
   assert.equal(circleRectHit({ x: 1, y: 1, r: 1 }, { x: 12, y: 8, w: 10, h: 6 }), false);
@@ -191,7 +218,18 @@ test('nextSnakeHead advances one grid unit and wraps at the board edge', () => {
 
 test('the homepage loads the hidden Enter-key launcher', async () => {
   const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(homepage, /easter-egg\.mjs\?v=20260923-10/);
+  assert.match(homepage, /easter-egg\.mjs\?v=20260924-11/);
+});
+
+test('the homepage launcher includes the Konami, WarGames, sudo, and source-code clues', async () => {
+  const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const launcher = await readFile(new URL('../easter-egg.mjs', import.meta.url), 'utf8');
+
+  assert.match(homepage, /Some passwords are names\. Some codes begin with two steps up\./);
+  assert.match(launcher, /ORIGIN CODE ACCEPTED/);
+  assert.match(launcher, /GREETINGS PROFESSOR FALKEN\./);
+  assert.match(launcher, /visitor is not in the sudoers file\./);
+  assert.match(launcher, /source=joshua/);
 });
 
 test('the arcade build uses one version across its page and launchers', async () => {
@@ -204,7 +242,7 @@ test('the arcade build uses one version across its page and launchers', async ()
   assert.ok(version);
   assert.match(homepage, new RegExp(`easter-egg\\.mjs\\?v=${version}`));
   assert.match(launcher, new RegExp(`game-core\\.mjs\\?v=${version}`));
-  assert.match(launcher, new RegExp(`/games/\\?v=${version}`));
+  assert.match(launcher, new RegExp(`games/index\\.html\\?v=${version}`));
   assert.match(page, new RegExp(`renderedVersion = '${version}'`));
   assert.match(page, new RegExp(`arcade\\.mjs\\?v=${version}`));
   assert.match(arcade, new RegExp(`game-core\\.mjs\\?v=${version}`));
