@@ -331,9 +331,12 @@ test('DEFCON Command is a persistent JOSHUA-exclusive missile-defense program', 
     readFile(new URL('../games/arcade.mjs', import.meta.url), 'utf8'),
   ]);
   assert.match(launcher, /localStorage\.setItem\('bb-joshua-game-unlocked', '1'\)/);
+  assert.match(launcher, /localStorage\.setItem\('bb-wopr-theme-unlocked', '1'\)/);
+  assert.match(launcher, /localStorage\.setItem\('bb-style', 'wopr'\)/);
   assert.match(arcade, /class DefconCommand/);
   assert.match(arcade, /localStorage\.getItem\('bb-joshua-game-unlocked'\) === '1'/);
   assert.match(arcade, /launchSource === 'joshua'/);
+  assert.match(arcade, /localStorage\.setItem\('bb-wopr-theme-unlocked', '1'\)/);
   assert.match(arcade, /closestArmedSilo/);
   assert.match(arcade, /missilePointAt/);
   assert.match(arcade, /if \(id === 'defcon-command'\) return new DefconCommand\(\)/);

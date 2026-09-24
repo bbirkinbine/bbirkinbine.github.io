@@ -19,7 +19,7 @@ import {
   rectsOverlap,
   terrainHeightAtX,
   wrapPoint,
-} from './game-core.mjs?v=20260924-17';
+} from './game-core.mjs?v=20260924-18';
 
 const canvas = document.querySelector('#game-canvas');
 const ctx = canvas.getContext('2d');
@@ -37,7 +37,11 @@ let originFlightUnlocked = false;
 let joshuaGameUnlocked = launchSource === 'joshua';
 try {
   originFlightUnlocked = window.localStorage.getItem('bb-origin-code-unlocked') === '1';
-  if (launchSource === 'joshua') window.localStorage.setItem('bb-joshua-game-unlocked', '1');
+  if (launchSource === 'joshua') {
+    window.localStorage.setItem('bb-joshua-game-unlocked', '1');
+    window.localStorage.setItem('bb-wopr-theme-unlocked', '1');
+    window.localStorage.setItem('bb-style', 'wopr');
+  }
   joshuaGameUnlocked = joshuaGameUnlocked
     || window.localStorage.getItem('bb-joshua-game-unlocked') === '1';
 } catch {

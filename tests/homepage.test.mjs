@@ -5,7 +5,13 @@ import { runInNewContext } from 'node:vm';
 
 const runThemeScript = (
   themeScript,
-  { savedStyle = null, originUnlocked = false, joshuaUnlocked = false, reset = false } = {},
+  {
+    savedStyle = null,
+    originUnlocked = false,
+    joshuaUnlocked = false,
+    woprUnlocked = false,
+    reset = false,
+  } = {},
 ) => {
   const documentListeners = {};
   const toggleListeners = {};
@@ -19,6 +25,7 @@ const runThemeScript = (
   if (savedStyle) storage.set('bb-style', savedStyle);
   if (originUnlocked) storage.set('bb-origin-code-unlocked', '1');
   if (joshuaUnlocked) storage.set('bb-joshua-game-unlocked', '1');
+  if (woprUnlocked) storage.set('bb-wopr-theme-unlocked', '1');
   const toggle = {
     addEventListener(type, listener) {
       toggleListeners[type] = listener;
@@ -105,7 +112,8 @@ test('the homepage is a focused calling card without an empty Work section', asy
 
   assert.match(homepage, /<p class="profile-intro">/);
   assert.match(homepage, /I work in cybersecurity\. My current obsession is building local AI systems and agent workflows\./);
-  assert.match(homepage, /20\+ years in product security, security architecture, and offensive assessment\./);
+  assert.match(homepage, /many years in product security, security architecture, and offensive assessment\./);
+  assert.doesNotMatch(homepage, /20\+ years/);
   assert.doesNotMatch(homepage, /class="work-card"|id="work-title"/);
   assert.match(styles, /\.profile-intro\s*\{/);
   assert.match(styles, /grid-area:\s*intro/);
@@ -125,7 +133,7 @@ test('public pages declare the shared SVG favicon', async () => {
   }
 });
 
-test('the site exposes four standard styles and a persistent hidden Origin Code style', async () => {
+test('the site exposes four standard styles and two persistent hidden styles', async () => {
   const [homepage, privacy, terms, styles, themeScript] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../privacy.html', import.meta.url), 'utf8'),
@@ -139,13 +147,14 @@ test('the site exposes four standard styles and a persistent hidden Origin Code 
     assert.doesNotMatch(page, /class="theme-toggle"/);
   }
 
-  for (const style of ['terminal', 'arcade-night', 'vector-field', 'red-grid', 'origin-code']) {
+  for (const style of ['terminal', 'arcade-night', 'vector-field', 'red-grid', 'origin-code', 'wopr']) {
     assert.match(themeScript, new RegExp(`["']${style}["']`));
     assert.match(styles, new RegExp(`data-style="${style}"`));
   }
 
   assert.match(themeScript, /bb-style/);
   assert.match(themeScript, /bb-origin-code-unlocked/);
+  assert.match(themeScript, /bb-wopr-theme-unlocked/);
   assert.match(themeScript, /findStyle\("vector-field"\)/);
   assert.doesNotMatch(themeScript, /randomStyle/);
   assert.match(styles, /color-scheme:\s*dark/);
@@ -185,12 +194,47 @@ test('the Konami event unlocks Origin Code and keeps it in later selector cycles
   assert.equal(unlockedRedGrid.root.dataset.style, 'origin-code');
 });
 
-test('the reset URL clears both exclusive unlocks before the style selector initializes', async () => {
+test('the JOSHUA event unlocks WOPR and keeps both secret styles in selector cycles', async () => {
+  const themeScript = await readFile(new URL('../theme.js', import.meta.url), 'utf8');
+  const firstUnlock = runThemeScript(themeScript);
+  firstUnlock.documentListeners.DOMContentLoaded();
+  firstUnlock.documentListeners['bb:unlock-wopr']();
+
+  assert.equal(firstUnlock.root.dataset.style, 'wopr');
+  assert.deepEqual(firstUnlock.writes, [
+    ['bb-wopr-theme-unlocked', '1'],
+    ['bb-style', 'wopr'],
+  ]);
+  assert.equal(
+    firstUnlock.attributes['aria-label'],
+    'Switch visual style. Current: WOPR. Next: Terminal',
+  );
+
+  const reload = runThemeScript(themeScript, {
+    savedStyle: 'wopr',
+    woprUnlocked: true,
+  });
+  assert.equal(reload.root.dataset.style, 'wopr');
+
+  const bothUnlocked = runThemeScript(themeScript, {
+    savedStyle: 'red-grid',
+    originUnlocked: true,
+    woprUnlocked: true,
+  });
+  bothUnlocked.documentListeners.DOMContentLoaded();
+  bothUnlocked.toggleListeners.click({ detail: 1 });
+  assert.equal(bothUnlocked.root.dataset.style, 'origin-code');
+  bothUnlocked.toggleListeners.click({ detail: 1 });
+  assert.equal(bothUnlocked.root.dataset.style, 'wopr');
+});
+
+test('the reset URL clears both exclusive universes before the style selector initializes', async () => {
   const themeScript = await readFile(new URL('../theme.js', import.meta.url), 'utf8');
   const resetVisit = runThemeScript(themeScript, {
     savedStyle: 'origin-code',
     originUnlocked: true,
     joshuaUnlocked: true,
+    woprUnlocked: true,
     reset: true,
   });
 
@@ -200,6 +244,7 @@ test('the reset URL clears both exclusive unlocks before the style selector init
     'bb-style',
     'bb-origin-code-unlocked',
     'bb-joshua-game-unlocked',
+    'bb-wopr-theme-unlocked',
   ]);
   assert.equal(resetVisit.historyState.url, '/index.html');
 });
@@ -216,6 +261,19 @@ test('Origin Code uses a dedicated pixel-shooter scene rather than Vector Field 
   assert.match(styles, /shape-rendering='crispEdges'/);
   assert.match(styles, /animation:\s*origin-scroll/);
   assert.match(styles, /image-rendering:\s*pixelated/);
+});
+
+test('WOPR uses a dedicated NORAD defense display rather than another vector theme', async () => {
+  const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+
+  assert.match(homepage, /class="wopr-defense"/);
+  assert.match(homepage, /WOPR \/\/ NORAD/);
+  assert.match(homepage, /class="wopr-defcon">DEFCON 5/);
+  assert.match(homepage, /class="wopr-radar"/);
+  assert.match(homepage, /class="wopr-trajectories"/);
+  assert.match(styles, /animation:\s*wopr-trajectory/);
+  assert.match(styles, /STRATEGIC AIR COMMAND \/\/ ONLINE/);
 });
 
 test('Vector Field is the default until the visitor uses the selector', async () => {

@@ -82,6 +82,19 @@
   --portrait-dot: #3cbcfc;
 }
 
+:root[data-style="wopr"] {
+  --background: #050200;
+  --surface: #100600;
+  --text: #ffc15a;
+  --muted: #c46a24;
+  --line: #79310e;
+  --accent: #ff3b1f;
+  --accent-ink: #160200;
+  --glow: 0 0 10px rgba(255, 139, 37, 0.28);
+  --scanline: rgba(255, 151, 36, 0.045);
+  --portrait-dot: #ff9f32;
+}
+
 * {
   box-sizing: border-box;
   text-rendering: geometricprecision;
@@ -320,7 +333,8 @@ a:focus-visible {
 }
 
 .origin-flight,
-.origin-power-meter {
+.origin-power-meter,
+.wopr-defense {
   display: none;
 }
 
@@ -886,10 +900,213 @@ a:focus-visible {
   background: #f07818;
 }
 
+/* WOPR: original NORAD command-room graphics inspired by WarGames-era displays. */
+:root[data-style="wopr"] body {
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(166, 47, 8, 0.14), transparent 38%),
+    #050200;
+}
+
+:root[data-style="wopr"] body::after {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(255, 119, 28, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 119, 28, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, transparent 0 29%, rgba(255, 82, 24, 0.055) 29.4% 29.8%, transparent 30.2% 100%);
+  background-size: 36px 36px, 36px 36px, 100% 100%;
+  opacity: 0.85;
+}
+
+:root[data-style="wopr"] .home {
+  display: grid;
+  grid-template-areas:
+    "title portrait"
+    "intro portrait"
+    "links portrait"
+    "defense defense";
+  grid-template-columns: minmax(0, 1.5fr) minmax(12rem, 0.62fr);
+  gap: 0.8rem 2rem;
+  align-items: center;
+  width: min(100%, 980px);
+  padding: 1.25rem;
+  border: 1px solid #8d3d14;
+  border-top: 5px solid #ff3b1f;
+  background: rgba(10, 3, 0, 0.94);
+  box-shadow: 0 0 0 4px #210a02, 0 0 32px rgba(255, 61, 24, 0.12);
+  text-align: left;
+}
+
+:root[data-style="wopr"] .home::before {
+  position: absolute;
+  top: -0.1rem;
+  right: 1rem;
+  padding: 0.1rem 0.55rem;
+  color: #ffd289;
+  background: #a8230f;
+  content: "STRATEGIC AIR COMMAND // ONLINE";
+  font-family: "VT323", monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+
+:root[data-style="wopr"] .home h1 {
+  grid-area: title;
+  align-self: end;
+  color: #ffd289;
+  font-size: clamp(2.5rem, 5.2vw, 4rem);
+  letter-spacing: 0.09em;
+  text-align: left;
+}
+
+:root[data-style="wopr"] .prompt-mark,
+:root[data-style="wopr"] .terminal-cursor {
+  color: #ff3b1f;
+  background: #ff3b1f;
+}
+
+:root[data-style="wopr"] .dot-portrait {
+  grid-area: portrait;
+  width: 100%;
+  margin: 0;
+  padding: 0.45rem;
+  border: 1px solid #8d3d14;
+  border-bottom: 4px solid #ff3b1f;
+  background: #080200;
+  box-shadow: inset 0 0 22px rgba(255, 105, 24, 0.09);
+}
+
+:root[data-style="wopr"] .profile-intro {
+  grid-area: intro;
+  width: 100%;
+  margin: 0;
+}
+
+:root[data-style="wopr"] .profile-links {
+  grid-area: links;
+  justify-content: flex-start;
+  margin-top: 0.3rem;
+}
+
+:root[data-style="wopr"] .profile-links a {
+  color: #ffc15a;
+  border-color: #79310e;
+  background: #080200;
+}
+
+:root[data-style="wopr"] .profile-links a:hover,
+:root[data-style="wopr"] .profile-links a:focus-visible {
+  color: #160200;
+  border-color: #ff3b1f;
+  background: #ff3b1f;
+}
+
+:root[data-style="wopr"] .wopr-defense {
+  grid-area: defense;
+  display: block;
+  margin-top: 0.65rem;
+  border: 1px solid #8d3d14;
+  background: #060200;
+  overflow: hidden;
+}
+
+:root[data-style="wopr"] .wopr-status-line,
+:root[data-style="wopr"] .wopr-city-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  color: #ffb33f;
+  font-family: "VT323", monospace;
+  font-size: 1.05rem;
+  letter-spacing: 0.09em;
+  line-height: 1;
+}
+
+:root[data-style="wopr"] .wopr-status-line {
+  border-bottom: 1px solid #79310e;
+}
+
+:root[data-style="wopr"] .wopr-defcon {
+  color: #ffd289;
+  background: #a8230f;
+  padding: 0.18rem 0.5rem;
+  animation: wopr-alert 1.4s steps(2, end) infinite;
+}
+
+:root[data-style="wopr"] .wopr-radar {
+  display: block;
+  width: 100%;
+  height: clamp(7rem, 17vw, 11rem);
+}
+
+:root[data-style="wopr"] .wopr-grid {
+  fill: none;
+  stroke: #783311;
+  stroke-width: 1;
+  opacity: 0.48;
+}
+
+:root[data-style="wopr"] .wopr-map {
+  fill: rgba(160, 63, 15, 0.18);
+  stroke: #e28427;
+  stroke-width: 2;
+}
+
+:root[data-style="wopr"] .wopr-range-rings {
+  fill: none;
+  stroke: #ff9f32;
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+:root[data-style="wopr"] .wopr-trajectories {
+  fill: none;
+  stroke: #ff3b1f;
+  stroke-width: 3;
+  stroke-dasharray: 7 8;
+  animation: wopr-trajectory 1.2s linear infinite;
+}
+
+:root[data-style="wopr"] .wopr-targets {
+  fill: #ffd289;
+  stroke: #ff3b1f;
+  stroke-width: 2;
+}
+
+:root[data-style="wopr"] .wopr-city-status {
+  flex-wrap: wrap;
+  border-top: 1px solid #79310e;
+  font-size: 0.9rem;
+}
+
+:root[data-style="wopr"] .wopr-city-status b {
+  color: #ffd289;
+  font-weight: 400;
+}
+
+@keyframes wopr-alert {
+  50% {
+    background: #5c1609;
+  }
+}
+
+@keyframes wopr-trajectory {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
 @media (max-width: 760px) {
   :root[data-style="arcade-night"] .home,
   :root[data-style="vector-field"] .home,
-  :root[data-style="origin-code"] .home {
+  :root[data-style="origin-code"] .home,
+  :root[data-style="wopr"] .home {
     display: block;
     width: min(100%, 700px);
     text-align: center;
@@ -897,26 +1114,30 @@ a:focus-visible {
 
   :root[data-style="arcade-night"] .dot-portrait,
   :root[data-style="vector-field"] .dot-portrait,
-  :root[data-style="origin-code"] .dot-portrait {
+  :root[data-style="origin-code"] .dot-portrait,
+  :root[data-style="wopr"] .dot-portrait {
     width: clamp(12rem, 58vw, 15rem);
     margin: 0 auto 1.1rem;
   }
 
   :root[data-style="arcade-night"] .home h1,
   :root[data-style="vector-field"] .home h1,
-  :root[data-style="origin-code"] .home h1 {
+  :root[data-style="origin-code"] .home h1,
+  :root[data-style="wopr"] .home h1 {
     text-align: center;
   }
 
   :root[data-style="arcade-night"] .profile-intro,
   :root[data-style="vector-field"] .profile-intro,
-  :root[data-style="origin-code"] .profile-intro {
+  :root[data-style="origin-code"] .profile-intro,
+  :root[data-style="wopr"] .profile-intro {
     margin: 2rem auto 0;
   }
 
   :root[data-style="arcade-night"] .profile-links,
   :root[data-style="vector-field"] .profile-links,
-  :root[data-style="origin-code"] .profile-links {
+  :root[data-style="origin-code"] .profile-links,
+  :root[data-style="wopr"] .profile-links {
     justify-content: center;
     margin-top: 1.3rem;
   }
@@ -947,6 +1168,28 @@ a:focus-visible {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 1rem;
   }
+
+  :root[data-style="wopr"] .home {
+    padding: 1rem 0.75rem 0.75rem;
+  }
+
+  :root[data-style="wopr"] .home::before {
+    right: 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  :root[data-style="wopr"] .wopr-defense {
+    margin-top: 1.1rem;
+  }
+
+  :root[data-style="wopr"] .wopr-radar {
+    height: 7.5rem;
+  }
+
+  :root[data-style="wopr"] .wopr-city-status {
+    justify-content: center;
+    gap: 0.4rem 0.9rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -968,7 +1211,9 @@ a:focus-visible {
   }
 
   :root[data-style="origin-code"] body::after,
-  :root[data-style="origin-code"] .origin-ship {
+  :root[data-style="origin-code"] .origin-ship,
+  :root[data-style="wopr"] .wopr-defcon,
+  :root[data-style="wopr"] .wopr-trajectories {
     animation: none;
   }
 }

@@ -4,7 +4,7 @@ import {
   appendTypedSecret,
   shouldOpenArcade,
   typedSecretAction,
-} from './games/game-core.mjs?v=20260924-17';
+} from './games/game-core.mjs?v=20260924-18';
 
 let konamiProgress = 0;
 let typedBuffer = '';
@@ -122,12 +122,14 @@ function openArcade(source = 'enter') {
   if (source === 'joshua') {
     try {
       window.localStorage.setItem('bb-joshua-game-unlocked', '1');
+      window.localStorage.setItem('bb-wopr-theme-unlocked', '1');
+      window.localStorage.setItem('bb-style', 'wopr');
     } catch {
       // The source query still grants access for this visit when storage is unavailable.
     }
   }
   navigating = true;
-  window.location.assign(`games/index.html?v=20260924-17&source=${source}`);
+  window.location.assign(`games/index.html?v=20260924-18&source=${source}`);
 }
 
 window.addEventListener('keydown', (event) => {
