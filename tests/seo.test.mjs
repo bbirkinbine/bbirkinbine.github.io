@@ -9,7 +9,7 @@ test('homepage publishes canonical search and social metadata without visible co
   const head = homepage.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? '';
 
   assert.match(head, /<title>Brian Birkinbine \| AI Systems, Agents &amp; Cybersecurity<\/title>/);
-  assert.match(head, /<meta name="description" content="Brian Birkinbine works in cybersecurity and is currently focused on building local AI systems and agent workflows, informed by many years in product security, security architecture, and offensive assessment\." \/>/);
+  assert.match(head, /<meta name="description" content="Brian Birkinbine works in cybersecurity and is currently focused on building local AI systems and agent workflows, informed by many years in systems administration, product security, security architecture, and offensive assessment\." \/>/);
   assert.doesNotMatch(head, /20\+ years/);
   assert.match(head, /<link rel="canonical" href="https:\/\/brianbirkinbine\.com\/" \/>/);
   assert.match(head, /<meta property="og:url" content="https:\/\/brianbirkinbine\.com\/" \/>/);

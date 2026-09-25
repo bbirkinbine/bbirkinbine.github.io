@@ -112,7 +112,7 @@ test('the homepage is a focused calling card without an empty Work section', asy
 
   assert.match(homepage, /<p class="profile-intro">/);
   assert.match(homepage, /I work in cybersecurity\. My current obsession is building local AI systems and agent workflows\./);
-  assert.match(homepage, /many years in product security, security architecture, and offensive assessment\./);
+  assert.match(homepage, /many years in systems administration, product security, security architecture, and offensive assessment\./);
   assert.doesNotMatch(homepage, /20\+ years/);
   assert.doesNotMatch(homepage, /class="work-card"|id="work-title"/);
   assert.match(styles, /\.profile-intro\s*\{/);
